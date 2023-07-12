@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-const userRouter = express.Router();
+const app = express();
+
+const authServer = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -29,6 +31,7 @@ userRouter.post('/signup', async (req, res) => {
         // Using the second hashedpassword to make coding process easier. Will switch back later.
         // const hashedPassword = await bcrypt.hash(password, salt);
         const hashedPassword = password;
+
 
         // The line below combines the two lines above into one. The 10 specifies the number of rounds to create the salt. 
         // const hashedPassword = await bcrypt.hash(password, 10);
@@ -100,5 +103,7 @@ function authenticateToken(req, res, next) {
         // Next allows us to move on to the next middleware
     })
 }
+
+app.listen(4000);
 
 module.exports = userRouter;
