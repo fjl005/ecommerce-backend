@@ -2,20 +2,22 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 const User = require('./models/User');
 
-// This code will be run whenever we run passport.authenticate in our code.
+// This code will be run whenever we run passport.authenticate in our code. The passport middleware is being passed into this file. 
 module.exports = function (passport) {
-    // Configure a LocalStrategy for username/password authentication
+    // Configure a LocalStrategy for username/password authentication. Passport.use will perform the configuration. There is only one parameter, which we define as the LocalStrategy (to authenticate based on user/pw). But this LocalStrategy class takes in two parameters: first is the items of authentication (which in this case is username and password, though the password is assumed), and the second is a callback function.
+
+    // The callback function takes the requests of the LocalStrategy and a done callback function. 
+
+    // Done is a callback function that takes three parameters: (1) error (null if no error), (2) user (false if no user), and (3) message (to display the error).
     passport.use(new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
         // Find the user in the database based on the provided username
         User.findOne({ username: username })
             .then(user => {
                 if (!user) {
-                    // If user is not found, return an error indicating username not found
-                    //   Done Callback takes three parameters: (1) error, (2) user, (3) message
                     return done(null, false, { message: 'Username not found' });
                 }
 
-                // Compare the provided password with the hashed password stored in the database
+                // Otherwise, by this point we found a matching user in the database. Now compare the provided password with the hashed password stored in the database
                 bcrypt.compare(password, user.password, (error, isMatch) => {
                     if (error) throw error;
                     if (isMatch) {

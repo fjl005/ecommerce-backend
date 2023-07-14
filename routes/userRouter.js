@@ -7,9 +7,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
-const { createTokens } = require('../JWT');
+const { createAccessToken, createRefreshToken, validateToken } = require('../JWT');
 
-// passport config
+// Configure passport by first importing the middleware, then passing it as a parameter into my passport-config file.
 const passport = require('passport');
 require('../passport-config')(passport);
 
@@ -53,7 +53,10 @@ userRouter.post('/signup', async (req, res) => {
 });
 
 userRouter.post('/login', (req, res, next) => {
+    // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
     passport.authenticate('local', (err, user, info) => {
+        // (err, user, info) => is the callback function that's run after the authentication process. 
+        // (1) Err, for any error that occurred during authentication, (2) user, the authenticated user assuming success, and (3) info, providing additional info about the authentication process. 
         if (err) {
             return res.status(500).send('An error occurred during authentication');
         }
@@ -62,39 +65,34 @@ userRouter.post('/login', (req, res, next) => {
         }
 
         // If the authentication is successful, generate the JWT tokens
-        const { accessToken, refreshToken } = createTokens(user);
+        const accessToken = createAccessToken(user);
+        const refreshToken = createRefreshToken(user);
 
-        // Set the tokens as cookies or send them as response data
-        res.cookie('access-token', accessToken, {
-            maxAge: 60 * 60 * 1000, // 1 hour
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-        });
+        // Instead of storing the access/refresh tokens in the cookie, store them in the header.
+        res.setHeader('Authorization', `Bearer ${accessToken}`)
+
+        // // Set the tokens as cookies or send them as response data. Access tokens are generally short-lived and refresh tokens last longer. The refresh token is not meant to be sent with every request to the server and is instead securely stored on the client side (either in a cookie or local storage) and used to obtain a new access token when the current one expires. 
+        // res.cookie('access-token', accessToken, {
+        //     maxAge: 60 * 60 * 1000, // 1 hour
+        //     httpOnly: true,
+        //     // I will omit the secure option below, as I will not opt for https. Since this is a portfolio project not used for real purposes, I don't think it'll be necessary to pay for HTTPS.
+        //     // secure: process.env.NODE_ENV === 'production', // Set to true in production
+        // });
         res.cookie('refresh-token', refreshToken, {
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
+            // secure: process.env.NODE_ENV === 'production', // Set to true in production
         });
 
         // Redirect or send a response indicating successful login
-        res.redirect('/');
+        // res.redirect('/');
+        res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
     })(req, res, next);
 });
 
-userRouter.get('/login/redirect', (req, res) => {
-    const errorMessage = req.flash('error')[0];
-    res.status(400).send(`Error: ${errorMessage}.`);
-});
-
 userRouter.get('/logout', (req, res) => {
-    req.logout();
-    req.session.destroy((err) => {
-        if (err) {
-            console.log('Error logging out:', err);
-            return res.status(500).send('Failed to log out');
-        }
-        res.redirect('/login');
-    });
+    // Clear the access token and refresh token.
+    res.clearCookie('refresh-token');
 });
 
 
