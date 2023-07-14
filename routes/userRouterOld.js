@@ -1,29 +1,45 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-
 const userRouter = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
 const User = require('../models/User');
-const { createTokens } = require('../JWT');
+const { createTokens, validateToken } = require('../JWT');
+const flash = require('express-flash');
+const session = require('express-session');
 
 // passport config
 const passport = require('passport');
 require('../passport-config')(passport);
 
-userRouter.get('/', (req, res) => {
-    res.status(200).send('Please Log In');
-});
+// const initializePassport = require('../passport-config');
+// initializePassport(passport,
+//     async (username) => await User.findOne({ username: username }),
+//     async (id) => await User.findById(id));
+// InitializePassport takes three parameters, which are defined back in passport-config. 
+// (1) passport, (2) getUserByUsername function, (3) getUserById function
+
+
+// Two steps for password hashing:
+// (1) create a salt (which gets added to the beginning of the password). New salt is used for every user. This makes our database more secure. Hypothetically, if ten people have the same password, and that password gets hacked, not all ten would be compromised (which would be the case if there was no salt).
+// (2) create a hashed password with the salt
+
+// userRouter.get('/', validateToken, (req, res) => {
+//     res.status(200).send('Welcome, logged in user!');
+// });
+
+userRouter.get('/', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true
+}));
 
 userRouter.post('/signup', async (req, res) => {
-    const { username, password } = req.body;
-    if (password.length < 6) {
-        return res.status(400).send('Password less than 6 characters');
-    }
-
     try {
+        const username = req.body.username;
+        const password = req.body.password;
+
         if (!username || !password) {
             return res.status(400).send('User and password fields are required');
         }
@@ -52,49 +68,14 @@ userRouter.post('/signup', async (req, res) => {
     }
 });
 
-userRouter.post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-        if (err) {
-            return res.status(500).send('An error occurred during authentication');
-        }
-        if (!user) {
-            return res.status(401).send('Invalid username or password');
-        }
-
-        // If the authentication is successful, generate the JWT tokens
-        const { accessToken, refreshToken } = createTokens(user);
-
-        // Set the tokens as cookies or send them as response data
-        res.cookie('access-token', accessToken, {
-            maxAge: 60 * 60 * 1000, // 1 hour
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-        });
-        res.cookie('refresh-token', refreshToken, {
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Set to true in production
-        });
-
-        // Redirect or send a response indicating successful login
-        res.redirect('/');
-    })(req, res, next);
-});
+userRouter.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/users/login/redirect',
+    failureFlash: true
+}));
 
 userRouter.get('/login/redirect', (req, res) => {
-    const errorMessage = req.flash('error')[0];
-    res.status(400).send(`Error: ${errorMessage}.`);
-});
-
-userRouter.get('/logout', (req, res) => {
-    req.logout();
-    req.session.destroy((err) => {
-        if (err) {
-            console.log('Error logging out:', err);
-            return res.status(500).send('Failed to log out');
-        }
-        res.redirect('/login');
-    });
+    res.status(400).send('error please try again');
 });
 
 
