@@ -1,16 +1,19 @@
 const jwt = require('jsonwebtoken');
+const tokenBlacklist = require('./tokenBlacklist');
 
 const createAccessToken = (user) => {
     // Create your access token using the sign method from jsonwebtoken.
     const accessToken = jwt.sign({ username: user.username, id: user._id },
-        process.env.ACCESS_TOKEN_SECRET);
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '30s' });
     return accessToken;
 };
 
 const createRefreshToken = (user) => {
     // Create your access token using the sign method from jsonwebtoken.
     const accessToken = jwt.sign({ username: user.username, id: user._id },
-        process.env.REFRESH_TOKEN_SECRET);
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: '7d' });
     return accessToken;
 };
 
@@ -29,34 +32,46 @@ const validateToken = (req, res, next) => {
 
     if (!accessToken && !refreshToken) return res.status(400).send('Error: user not authenticated');
 
+    if (tokenBlacklist.has(accessToken) && tokenBlacklist.has(refreshToken)) return res.status(401).json({ error: 'Invalid access token' });
+
+
     try {
-        // The verify method will return the decoded token. If invalid, then it will throw an error, which will be handled in our catch.
-        const validAccessToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        const validatedAccessToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
 
-        // Check if the access token is expired. Date.now() is the current time in milliseconds. 
-        if (validAccessToken.exp < Date.now() / 1000) {
-            const validateRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-
-            // If the refresh token is valid, then create a new access token and proceed with authentication.
-            if (validateRefreshToken) {
-                const newAccessToken = createAccessToken({ username: validateRefreshToken.username, _id: validateRefreshToken.id });
-
-                // Set the new access token in the response headers or cookies
-                res.cookie('access-token', newAccessToken, {
-                    maxAge: 60 * 60 * 1000, // 1 hour
-                    httpOnly: true,
-                });
-
-                req.authenticated = true; // Set the authenticated property in the request
-                return next();
-            }
+        if (validatedAccessToken) {
+            console.log('validated access token: ', validatedAccessToken);
         }
+        // The verify method will return the decoded token. If invalid, then it will throw an error, which will be handled in our catch.
 
         // Otherwise, if we reach this point, then the access token is valid and has not expired. proceed to authenticate. 
         req.authenticated = true;
         return next();
 
-    } catch (error) { return res.status(400).json({ error: error }) }
+    } catch (accessTokenError) {
+        console.log('access token error: ', accessTokenError);
+
+        try {
+            const validatedRefreshToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+            console.log('validated refresh token: ', validatedRefreshToken);
+
+            const newAccessToken = createAccessToken({ username: validatedRefreshToken.username, _id: validatedRefreshToken.id });
+
+            req.authenticated = true;
+            // res.setHeader('Authorization', `Bearer ${newAccessToken}`);
+            res.status(200).json({ accessToken: newAccessToken });
+            return next('route');
+        } catch (refreshTokenError) {
+            console.log('Refresh token error: ', refreshTokenError);
+            return res.status(400).json({ error: refreshTokenError, message: 'You must log in to access this page' });
+        }
+    }
 }
 
-module.exports = { createAccessToken, createRefreshToken, validateToken };
+const requireAuth = (req, res, next) => {
+    if (!req.authenticated) {
+        return res.status(401).json({ error: 'Unauthorized access' });
+    }
+    next();
+};
+
+module.exports = { createAccessToken, createRefreshToken, validateToken, requireAuth };

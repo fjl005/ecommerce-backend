@@ -30,7 +30,7 @@ app.use(passport.initialize());
 // Connect flash
 app.use(flash());
 
-const { validateToken } = require('./JWT');
+const { validateToken, requireAuth } = require('./JWT');
 
 const router = express.Router();
 const productsRouter = require('./routes/productsRouter');
@@ -42,7 +42,11 @@ router.use('/users', userRouter);
 // Mount the router as middleware on the main app
 app.use('/', router);
 
-app.get('/', validateToken, (req, res) => {
+app.post('/', validateToken, (req, res) => {
+    res.send('Hello World');
+});
+
+app.get('/', validateToken, requireAuth, (req, res) => {
     res.send('Hello World');
 });
 

@@ -7,11 +7,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
-const { createAccessToken, createRefreshToken, validateToken } = require('../JWT');
+const { createAccessToken, createRefreshToken } = require('../JWT');
 
 // Configure passport by first importing the middleware, then passing it as a parameter into my passport-config file.
 const passport = require('passport');
 require('../passport-config')(passport);
+
+// Import token blacklist
+const tokenBlacklist = require('../tokenBlacklist');
 
 userRouter.get('/', (req, res) => {
     res.status(200).send('Please Log In');
@@ -70,16 +73,7 @@ userRouter.post('/login', (req, res, next) => {
 
         // Instead of storing the access/refresh tokens in the cookie, store them in the header.
         res.setHeader('Authorization', `Bearer ${accessToken}`)
-
-        // // Set the tokens as cookies or send them as response data. Access tokens are generally short-lived and refresh tokens last longer. The refresh token is not meant to be sent with every request to the server and is instead securely stored on the client side (either in a cookie or local storage) and used to obtain a new access token when the current one expires. 
-        // res.cookie('access-token', accessToken, {
-        //     maxAge: 60 * 60 * 1000, // 1 hour
-        //     httpOnly: true,
-        //     // I will omit the secure option below, as I will not opt for https. Since this is a portfolio project not used for real purposes, I don't think it'll be necessary to pay for HTTPS.
-        //     // secure: process.env.NODE_ENV === 'production', // Set to true in production
-        // });
         res.cookie('refresh-token', refreshToken, {
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             httpOnly: true,
             // secure: process.env.NODE_ENV === 'production', // Set to true in production
         });
@@ -91,8 +85,22 @@ userRouter.post('/login', (req, res, next) => {
 });
 
 userRouter.get('/logout', (req, res) => {
-    // Clear the access token and refresh token.
-    res.clearCookie('refresh-token');
+    const accessToken = req.headers.authorization.split(' ')[1];
+    const refreshToken = req.cookies['refresh-token'];
+
+    if (tokenBlacklist.has(accessToken) && tokenBlacklist.has(refreshToken)) return res.status(401).send('Already logged out, or you were never logged in.');
+
+    // Add tokens to the blacklist
+    tokenBlacklist.add(accessToken);
+    tokenBlacklist.add(refreshToken);
+
+    console.log('token black list: ', tokenBlacklist);
+    console.log('access token: ', accessToken);
+    console.log('refresh token: ', refreshToken);
+
+    // Clear the cookies or remove the tokens from local storage on the client side
+    if (!accessToken && !refreshToken) return res.status(401).send('Already logged out; you were never signed in');
+    res.status(200).json({ message: 'Logged out successfully' });
 });
 
 
