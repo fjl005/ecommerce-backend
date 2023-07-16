@@ -6,7 +6,8 @@ const sessionValidation = (req, res, next) => {
         next();
     } else {
         // The session is invalid or not present, so redirect the user to the login page
-        res.status(400).send('You must log in before accessing this page').redirect('/users/login');
+        // res.redirect('/users/login');
+        res.status(400).send('You must log in before accessing this page');
     }
 };
 

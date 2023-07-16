@@ -54,6 +54,7 @@ userRouter.post('/signup', async (req, res) => {
     }
 });
 
+
 userRouter.post('/login', (req, res, next) => {
     // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
     passport.authenticate('local', (err, user, info) => {
@@ -66,35 +67,43 @@ userRouter.post('/login', (req, res, next) => {
             return res.status(401).send('Invalid username or password');
         }
 
-        // If the authentication is successful, create the session by setting data in req.session
-        req.session.user = {
-            username: user.username,
-            _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
-        };
+        // If authentication is successful, regenerate the session ID (recommended for security). So if a user logs out and logs back in, the session ID will be different
+        req.session.regenerate((error) => {
+            if (error) {
+                return res.status(500).send('An error occurred during session regeneration');
+            }
 
-        /*
-
-        COMMENTING THIS CODE OUT BECAUSE I WANT TO TRY USING SESSIONS INSTEAD OF JWT'S!!
-
-
-        // If the authentication is successful, generate the JWT tokens
-        const accessToken = createAccessToken(user);
-        const refreshToken = createRefreshToken(user);
-
-        // Instead of storing the access/refresh tokens in the cookie, store them in the header.
-        res.setHeader('Authorization', `Bearer ${accessToken}`)
-        res.cookie('refresh-token', refreshToken, {
-            httpOnly: true,
-            // secure: process.env.NODE_ENV === 'production', // Set to true in production
-        });
-
-
-        */
-
-        // res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
-        res.status(200).json({ message: 'user logged in!', user: req.session.user });
+            // Set user object in the session data
+            req.session.user = {
+                username: user.username,
+                _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
+            };
+            res.status(200).json({ message: 'user logged in!', user: req.session.user });
+        })
     })(req, res, next);
+    // I include (req, res, next) at the end to invoke the passport middleware. Without it, I am simply returning the middleware function but not invoking it. 
 });
+
+/*
+
+COMMENTING THIS CODE OUT BECAUSE I WANT TO TRY USING SESSIONS INSTEAD OF JWT'S!!
+
+// If the authentication is successful, generate the JWT tokens
+const accessToken = createAccessToken(user);
+const refreshToken = createRefreshToken(user);
+
+// Instead of storing the access/refresh tokens in the cookie, store them in the header.
+res.setHeader('Authorization', `Bearer ${accessToken}`)
+res.cookie('refresh-token', refreshToken, {
+    httpOnly: true,
+    // secure: process.env.NODE_ENV === 'production', // Set to true in production
+});
+
+// res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
+*/
+
+// })(req, res, next);
+
 
 userRouter.get('/logout', (req, res) => {
 
