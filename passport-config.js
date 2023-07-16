@@ -1,54 +1,55 @@
+const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
 const User = require('./models/User');
 
-// This code will be run whenever we run passport.authenticate in our code. The passport middleware is being passed into this file. 
-module.exports = function (passport) {
-    // Configure a LocalStrategy for username/password authentication. Passport.use will perform the configuration. There is only one parameter, which we define as the LocalStrategy (to authenticate based on user/pw). But this LocalStrategy class takes in two parameters: first is the items of authentication (which in this case is username and password, though the password is assumed), and the second is a callback function.
+// This code will be run whenever we run passport.authenticate in our code. 
 
-    // The callback function takes the requests of the LocalStrategy and a done callback function. 
+// Configure a LocalStrategy for username/password authentication. Passport.use will perform the configuration. There is only one parameter, which we define as the LocalStrategy (to authenticate based on user/pw). But this LocalStrategy class takes in two parameters: first is the items of authentication (which in this case is username and password, though the password is assumed), and the second is a callback function.
 
-    // Done is a callback function that takes three parameters: (1) error (null if no error), (2) user (false if no user), and (3) message (to display the error).
-    passport.use(new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
-        // Find the user in the database based on the provided username
-        User.findOne({ username: username })
-            .then(user => {
-                if (!user) {
-                    return done(null, false, { message: 'Username not found' });
+// The callback function takes the requests of the LocalStrategy and a done callback function. 
+
+// Done is a callback function that takes three parameters: (1) error (null if no error), (2) user (false if no user), and (3) message (to display the error).
+passport.use(new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
+    // Find the user in the database based on the provided username
+    User.findOne({ username: username })
+        .then(user => {
+            if (!user) {
+                return done(null, false, { message: 'Username not found' });
+            }
+
+            // Otherwise, by this point we found a matching user in the database. Now compare the provided password with the hashed password stored in the database
+            bcrypt.compare(password, user.password, (error, isMatch) => {
+                if (error) throw error;
+                if (isMatch) {
+                    // If the passwords match, return the user object
+                    return done(null, user);
+                } else {
+                    // If the passwords don't match, return an error indicating incorrect password
+                    return done(null, false, { message: 'Password incorrect' });
                 }
-
-                // Otherwise, by this point we found a matching user in the database. Now compare the provided password with the hashed password stored in the database
-                bcrypt.compare(password, user.password, (error, isMatch) => {
-                    if (error) throw error;
-                    if (isMatch) {
-                        // If the passwords match, return the user object
-                        return done(null, user);
-                    } else {
-                        // If the passwords don't match, return an error indicating incorrect password
-                        return done(null, false, { message: 'Password incorrect' });
-                    }
-                });
-            })
-            .catch(error => console.log('Error: ', error));
-    }));
-
-    // Serialize the user object to store in the session
-    passport.serializeUser((user, done) => {
-        done(null, user.id);
-    });
-
-    // Deserialize the user object from the session
-    passport.deserializeUser((id, done) => {
-        User.findById(id).exec()
-            .then(user => {
-                done(null, user);
-            })
-            .catch(err => {
-                done(err, null);
             });
-    });
-};
+        })
+        .catch(error => console.log('Error: ', error));
+}));
 
+// Serialize the user object to store in the session
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+// Deserialize the user object from the session
+passport.deserializeUser((id, done) => {
+    User.findById(id).exec()
+        .then(user => {
+            done(null, user);
+        })
+        .catch(err => {
+            done(err, null);
+        });
+});
+
+module.exports = passport;
 
 
 // In a typical web app, the credentials are only sent during login. If succeeded, then a session will be established and maintained via a cookie set in the user's browser. Subsequent requests will not contain credentials, but rather the unique cookie that identifies the session. In order to support login sessions, passport will serialize and deserialize the user instances to and from the session.

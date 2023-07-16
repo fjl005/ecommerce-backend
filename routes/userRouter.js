@@ -10,8 +10,7 @@ const User = require('../models/User');
 const { createAccessToken, createRefreshToken } = require('../JWT');
 
 // Configure passport by first importing the middleware, then passing it as a parameter into my passport-config file.
-const passport = require('passport');
-require('../passport-config')(passport);
+const passport = require('../passport-config');
 
 // Import token blacklist
 const tokenBlacklist = require('../tokenBlacklist');
@@ -67,6 +66,17 @@ userRouter.post('/login', (req, res, next) => {
             return res.status(401).send('Invalid username or password');
         }
 
+        // If the authentication is successful, create the session by setting data in req.session
+        req.session.user = {
+            username: user.username,
+            _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
+        };
+
+        /*
+
+        COMMENTING THIS CODE OUT BECAUSE I WANT TO TRY USING SESSIONS INSTEAD OF JWT'S!!
+
+
         // If the authentication is successful, generate the JWT tokens
         const accessToken = createAccessToken(user);
         const refreshToken = createRefreshToken(user);
@@ -78,13 +88,32 @@ userRouter.post('/login', (req, res, next) => {
             // secure: process.env.NODE_ENV === 'production', // Set to true in production
         });
 
-        // Redirect or send a response indicating successful login
-        // res.redirect('/');
-        res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
+
+        */
+
+        // res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
+        res.status(200).json({ message: 'user logged in!', user: req.session.user });
     })(req, res, next);
 });
 
 userRouter.get('/logout', (req, res) => {
+
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        // Optionally, you can also clear the refresh token cookie if you had set it earlier
+        // res.clearCookie('refresh-token');
+
+        return res.status(200).json({ message: 'Logged out successfully' });
+    });
+
+
+    /*
+    IGNORE THE STUFF BELOW, AS IT WAS USED FOR JWT's
+
     const accessToken = req.headers.authorization.split(' ')[1];
     const refreshToken = req.cookies['refresh-token'];
 
@@ -100,7 +129,10 @@ userRouter.get('/logout', (req, res) => {
 
     // Clear the cookies or remove the tokens from local storage on the client side
     if (!accessToken && !refreshToken) return res.status(401).send('Already logged out; you were never signed in');
+
+    
     res.status(200).json({ message: 'Logged out successfully' });
+    */
 });
 
 

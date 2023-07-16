@@ -10,18 +10,33 @@ app.use(express.json());
 app.use(cookieParser());
 
 const flash = require('express-flash');
-const passport = require('passport');
+const passport = require('./passport-config'); // passport was imported in passport-config and configured in this file.
 const session = require('express-session');
+
+const MongoDBStore = require('connect-mongodb-session')(session);
+const store = new MongoDBStore({
+    uri: process.env.MONGODB_URI,
+    collection: 'sessions',
+});
+
+store.on('error', (error) => {
+    console.error('Error connecting to MongoDB for session store:', error);
+});
 
 // Bodyparser
 app.use(express.urlencoded({ extended: false }));
 
 // Express session
-// app.use(session({
-//     secret: process.env.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false
-// }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
+        httpOnly: true,
+    },
+}));
 
 // Passport middleware
 app.use(passport.initialize());
@@ -31,6 +46,7 @@ app.use(passport.initialize());
 app.use(flash());
 
 const { validateToken, requireAuth } = require('./JWT');
+const sessionValidation = require('./sessionValidation');
 
 const router = express.Router();
 const productsRouter = require('./routes/productsRouter');
@@ -42,7 +58,11 @@ router.use('/users', userRouter);
 // Mount the router as middleware on the main app
 app.use('/', router);
 
-app.post('/', validateToken, (req, res) => {
+// app.post('/', validateToken, (req, res) => {
+//     res.send('Hello World');
+// });
+
+app.post('/', sessionValidation, (req, res) => {
     res.send('Hello World');
 });
 
