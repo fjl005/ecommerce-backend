@@ -51,6 +51,10 @@ userRouter.get('/login', (req, res) => {
 });
 
 userRouter.post('/login', (req, res, next) => {
+    if (req.session.user) {
+        return res.send('You are already signed in');
+    }
+
     passport.authenticate('local', (err, user, info) => {
         /* (err, user, info) => is the callback function that's run after the authentication process. 
         
