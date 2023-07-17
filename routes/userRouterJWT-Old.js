@@ -5,7 +5,7 @@ const userRouter = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { createTokens, validateToken } = require('../JWT');
+const { createTokens, validateToken } = require('../JWT-Old');
 const flash = require('express-flash');
 const session = require('express-session');
 
