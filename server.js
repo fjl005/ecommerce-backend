@@ -21,7 +21,7 @@ const session = require('express-session');
 
 (1) Express.json (parses incoming requests with JSON payloads, attaching it to the req.body property)
 (2) CookieParser (to access incoming cookies)
-(3) URLEncoded (to handle HTML form data)
+(3) URLEncoded (to handle HTML form data eventually)
 (4) Passport 
 (5) Save session for later, because we need to create the Store first.
 
@@ -46,8 +46,40 @@ store.on('error', (error) => {
     console.error('Error connecting to MongoDB for session store:', error);
 });
 
+// Need to connect to Mongo DB Database to add TTL
+const connect = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            useUnifiedTopology: true,
+            useNewUrlParser: true
+        });
+        console.log('Connected to MongoDB');
+        createTTLIndex();
+
+        // Create a Time to Live (TTL) index so the session immediately deletes after expiration. It will search for the 'sessions' collection in the database defined by our store and create the index with two paramaters:
+        // (1) expires: 1 means that it will add the index to the 'expires' field, and the '1' means that it will sort in ascending order, so the oldest (soonest to expire) will be on top.
+        // (2) expireAfterSeconds: 0 means that once expired, it will immediately delete the session from the database.
+        // store.client.db().collection('sessions').createIndex(
+        //     { expires: 1 },
+        //     { expireAfterSeconds: 0 }
+        // );
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+connect();
+
+const createTTLIndex = () => {
+    store.client.db().collection('sessions').createIndex(
+        { expires: 1 },
+        { expireAfterSeconds: 0 }
+    );
+    console.log('ttl added');
+}
+
 app.use(session({
-    // The secret is used to sign the sessino ID cookie.
+    // The secret is used to sign the session ID cookie.
     secret: process.env.SESSION_SECRET,
 
     // Resave will save the session data to the store on every request, even if the session didn't change. Setting it to false will reduce unnecessary writes to the session store. This is handy if you need to track every request, such as the time of the request sent (which may be used to track activity/inactivity).
@@ -61,7 +93,9 @@ app.use(session({
 
     // Defines options for our cookie
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
+        // maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
+        maxAge: 1000 * 2, // 5 seconds
+
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
         httpOnly: true,
@@ -99,20 +133,7 @@ app.get('/', sessionValidation, (req, res) => {
 
 
 
-/* Last part: Set up MongoDB Database connection and the server connection.*/
-const connect = async () => {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI), {
-            useUnifiedTopology: true,
-            useNewUrlParser: true
-        };
-        console.log('Connected to MongoDB');
-    } catch (error) {
-        console.error(error);
-    }
-}
-connect();
-
+/* Last part: set up the server connection. */
 const port = 5000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
