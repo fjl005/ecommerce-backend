@@ -21,7 +21,7 @@ const session = require('express-session');
 (2) CookieParser (to access incoming cookies)
 (3) URLEncoded (to handle HTML form data eventually)
 (4) Passport 
-(5) Save session for later, because we need to create the Store first.
+(5) Session for later, because we need to create the Store first.
 
 Middleware functions have access to the request and response objects. App.use() adds this middleware globally to our application.
 */
@@ -41,6 +41,7 @@ const store = new MongoDBStore({
     collection: 'sessions',
 });
 
+// Handle any errors with the store
 store.on('error', (error) => {
     console.error('Error connecting to MongoDB for session store:', error);
 });
@@ -83,16 +84,17 @@ router.use('/users', userRouter);
 
 
 /* STEP FIVE: INCLUDE MISCELLANEOUS IMPORTS. */
-const sessionValidation = require('./sessionValidation');
+// const sessionValidation = require('./sessionValidation');
+const authenticate = require('./authenticate');
 
 
 
 /* STEP SIX: ADD BASIC ROUTES FOR THE PAGES. */
-app.post('/', sessionValidation, (req, res) => {
+app.post('/', authenticate.sessionValidation, (req, res) => {
     res.send('Hello World');
 });
 
-app.get('/', sessionValidation, (req, res) => {
+app.get('/', authenticate.sessionValidation, (req, res) => {
     res.send('Hello World');
 });
 

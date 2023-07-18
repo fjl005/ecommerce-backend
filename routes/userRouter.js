@@ -4,11 +4,10 @@ const express = require('express');
 const userRouter = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
-const checkAdmin = require('../userAuthorization');
-const sessionValidation = require('../sessionValidation');
+const authenticate = require('../authenticate');
 
 
-userRouter.get('/', sessionValidation, (req, res) => {
+userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
         message: 'User Info listed down below',
         username: req.session.user.username,
@@ -17,7 +16,7 @@ userRouter.get('/', sessionValidation, (req, res) => {
     })
 });
 
-userRouter.post('/', sessionValidation, (req, res) => {
+userRouter.post('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
         message: 'User Info listed down below',
         username: req.session.user.username,
@@ -123,12 +122,12 @@ function performLogout(req, res) {
     });
 }
 
-userRouter.post('/admin', checkAdmin, (req, res) => {
+userRouter.post('/admin', authenticate.checkAdmin, (req, res) => {
     res.send('You are the admin!');
 })
 
 // THE BELOW WILL NEED TO BE USED FOR ADMIN, WILL NEED TO UPDATE USER AUTHORIZATION SOON!!!
-userRouter.delete('/', checkAdmin, async (req, res) => {
+userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
     try {
         // Find all non-admin users
         const nonAdminUsers = await User.find({ admin: false });
@@ -145,7 +144,7 @@ userRouter.delete('/', checkAdmin, async (req, res) => {
     }
 });
 
-userRouter.delete('/:id', checkAdmin, async (req, res) => {
+userRouter.delete('/:id', authenticate.checkAdmin, async (req, res) => {
     try {
         const userIdToDelete = req.params.id;
 
