@@ -4,10 +4,26 @@ const express = require('express');
 const userRouter = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const checkAdmin = require('../userAuthorization');
+const sessionValidation = require('../sessionValidation');
 
 
-userRouter.get('/', (req, res) => {
-    res.status(200).send('Please Log In');
+userRouter.get('/', sessionValidation, (req, res) => {
+    res.status(200).json({
+        message: 'User Info listed down below',
+        username: req.session.user.username,
+        userID: req.session.user._id,
+        admin: req.session.user.admin
+    })
+});
+
+userRouter.post('/', sessionValidation, (req, res) => {
+    res.status(200).json({
+        message: 'User Info listed down below',
+        username: req.session.user.username,
+        userID: req.session.user._id,
+        admin: req.session.user.admin
+    })
 });
 
 userRouter.post('/signup', async (req, res) => {
@@ -45,14 +61,14 @@ userRouter.post('/signup', async (req, res) => {
 
 userRouter.get('/login', (req, res) => {
     if (req.session.user) {
-        return res.send('You are already signed in');
+        return res.send(`You are already signed in as: ${req.session.user.username}`);
     }
     res.send('Login page');
 });
 
 userRouter.post('/login', (req, res, next) => {
     if (req.session.user) {
-        return res.send('You are already signed in');
+        return res.send(`You are already signed in as: ${req.session.user.username}`);
     }
 
     passport.authenticate('local', (err, user, info) => {
@@ -78,6 +94,7 @@ userRouter.post('/login', (req, res, next) => {
             req.session.user = {
                 username: user.username,
                 isLoggedIn: true,
+                admin: user.admin,
                 _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
             };
             res.status(200).json({ message: 'user logged in!', user: req.session.user });
@@ -106,17 +123,53 @@ function performLogout(req, res) {
     });
 }
 
+userRouter.post('/admin', checkAdmin, (req, res) => {
+    res.send('You are the admin!');
+})
+
 // THE BELOW WILL NEED TO BE USED FOR ADMIN, WILL NEED TO UPDATE USER AUTHORIZATION SOON!!!
-// userRouter.delete('/', async (req, res) => {
-//     User.deleteMany({})
-//         .then(() => {
-//             console.log('All documents deleted successfully');
-//             res.status(200).send('ALl user data deleted');
-//         })
-//         .catch(error => {
-//             console.error('Error deleting documents:', error);
-//             res.status(400).send('There was an error in deleting the user data');
-//         });
-// });
+userRouter.delete('/', checkAdmin, async (req, res) => {
+    try {
+        // Find all non-admin users
+        const nonAdminUsers = await User.find({ admin: false });
+
+        // Delete each non-admin user one by one
+        for (const user of nonAdminUsers) {
+            await user.deleteOne();
+        }
+
+        res.json({ message: 'Non-admin users deleted successfully.' })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'An error occurred while deleting non-admin users' });
+    }
+});
+
+userRouter.delete('/:id', checkAdmin, async (req, res) => {
+    try {
+        const userIdToDelete = req.params.id;
+
+        // Find the user by ID
+        const userToDelete = await User.findById(userIdToDelete);
+        console.log('user to delete: ', userToDelete);
+
+        if (!userToDelete) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        // Check if the user to be deleted is an admin
+        if (userToDelete.admin) {
+            return res.status(403).json({ error: 'Admin users cannot be deleted.' });
+        }
+
+        // If the user is not an admin, proceed with deletion
+        await userToDelete.deleteOne();
+
+        res.json({ message: 'User deleted successfully.' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 module.exports = userRouter;
