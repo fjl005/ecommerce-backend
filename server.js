@@ -35,7 +35,7 @@ app.use(passport.initialize());
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000',
-    methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
+    // methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
 }));
 
 
@@ -69,10 +69,8 @@ app.use(session({
 
     // Defines options for our cookie
     cookie: {
-        sameSite: 'none',
-        secure: false,
-        maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
-        // maxAge: 1000 * 5, // 5 seconds
+        // maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
+        maxAge: 1000 * 15, // 5 seconds
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
         httpOnly: true,

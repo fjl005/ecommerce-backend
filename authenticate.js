@@ -2,17 +2,25 @@ const jwt = require('jsonwebtoken');
 
 // Middleware to validate the session
 exports.sessionValidation = (req, res, next) => {
-    // Check if the user's session exists and contains user data (e.g., req.session.user)
+    // Check if the user's session cookie exists
     const sessionIdCookie = req.cookies['connect.sid'];
     console.log('session id cookie: ', sessionIdCookie);
 
-    if (sessionIdCookie) {
+    if (!sessionIdCookie) {
+        // The session cookie is not present, so redirect the user to the login page
+        return res.status(400).send('You must log in before accessing this page');
+    }
+
+    // Retrieve the session data from the database using the session ID
+    const store = req.sessionStore; // Access the session store from the request
+    store.get(sessionIdCookie, (error, session) => {
+        if (error || !session || !session.user) {
+            // The session data is not valid or doesn't exist, so redirect the user to the login page
+            return res.status(400).send('You must log in before accessing this page');
+        }
         // The session is valid, so allow the user to proceed
         next();
-    } else {
-        // The session is invalid or not present, so redirect the user to the login page
-        res.status(400).send('You must log in before accessing this page');
-    }
+    });
 
     // if (req.session.user) {
     //     // The session is valid, so allow the user to proceed

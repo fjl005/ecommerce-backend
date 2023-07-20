@@ -125,6 +125,8 @@ userRouter.post('/login', (req, res, next) => {
                 _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
             };
 
+            res.cookie('cookie.sid', req.session.id, { httpOnly: true })
+
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });
     })(req, res, next);
