@@ -8,7 +8,7 @@ const authenticate = require('../authenticate');
 const jwtFile = require('../JWT');
 
 
-userRouter.get('/', authenticate.validateToken, (req, res) => {
+userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
         message: 'User Info listed down below'
         // username: req.session.user.username,
@@ -66,44 +66,12 @@ userRouter.get('/login', (req, res) => {
     res.send('Login page');
 });
 
-
-userRouter.post('/login', (req, res, next) => {
-    // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
-    passport.authenticate('local', (err, user, info) => {
-        // (err, user, info) => is the callback function that's run after the authentication process. 
-        // (1) Err, for any error that occurred during authentication, (2) user, the authenticated user assuming success, and (3) info, providing additional info about the authentication process. 
-        if (err) {
-            return res.status(500).send('An error occurred during authentication');
-        }
-        if (!user) {
-            return res.status(401).send('Invalid username or password');
-        }
-
-        // If the authentication is successful, generate the JWT tokens
-        const accessToken = jwtFile.createAccessToken(user);
-        res.setHeader('Authorization', `Bearer ${accessToken}`);
-
-        // Refresh token not used because I can't store in the browser's cookie. I can't store in the browser's cookie because I can't send the cookie data without https.
-        // const refreshToken = jwtFile.createRefreshToken(user);
-        // res.cookie('refresh-token', refreshToken, {
-        //     httpOnly: true,
-        // });
-        res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
-    })(req, res, next);
-});
-
-// For SESSION
+// FOR JWT
 // userRouter.post('/login', (req, res, next) => {
-//     if (req.session.user) {
-//         return res.send(`You are already signed in as: ${req.session.user.username}`);
-//     }
-
+//     // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
 //     passport.authenticate('local', (err, user, info) => {
-//         /* (err, user, info) => is the callback function that's run after the authentication process. 
-
-//         (1) Err, for any error that occurred during authentication, 
-//         (2) user, the authenticated user assuming success, and 
-//         (3) info, providing additional info about the authentication process. */
+//         // (err, user, info) => is the callback function that's run after the authentication process. 
+//         // (1) Err, for any error that occurred during authentication, (2) user, the authenticated user assuming success, and (3) info, providing additional info about the authentication process. 
 //         if (err) {
 //             return res.status(500).send('An error occurred during authentication');
 //         }
@@ -111,24 +79,57 @@ userRouter.post('/login', (req, res, next) => {
 //             return res.status(401).send('Invalid username or password');
 //         }
 
-//         // If authentication is successful, regenerate the session ID (recommended for security). So if a user logs out and logs back in, the session ID will be different.
-//         req.session.regenerate((error) => {
-//             if (error) {
-//                 return res.status(500).send('An error occurred during session regeneration');
-//             }
+//         // If the authentication is successful, generate the JWT tokens
+//         const accessToken = jwtFile.createAccessToken(user);
+//         res.setHeader('Authorization', `Bearer ${accessToken}`);
 
-//             // Set user object in the session data
-//             req.session.user = {
-//                 username: user.username,
-//                 isLoggedIn: true,
-//                 admin: user.admin,
-//                 _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
-//             };
-//             res.status(200).json({ message: 'user logged in!', user: req.session.user });
-//         })
+//         // Refresh token not used because I can't store in the browser's cookie. I can't store in the browser's cookie because I can't send the cookie data without https.
+//         // const refreshToken = jwtFile.createRefreshToken(user);
+//         // res.cookie('refresh-token', refreshToken, {
+//         //     httpOnly: true,
+//         // });
+//         res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
 //     })(req, res, next);
-//     // I include (req, res, next) at the end to invoke the passport middleware. Without it, I am simply returning the middleware function without invoking it. 
 // });
+
+// For SESSION
+userRouter.post('/login', (req, res, next) => {
+    if (req.session.user) {
+        return res.send(`You are already signed in as: ${req.session.user.username}`);
+    }
+
+    passport.authenticate('local', (err, user, info) => {
+        /* (err, user, info) => is the callback function that's run after the authentication process. 
+
+        (1) Err, for any error that occurred during authentication, 
+        (2) user, the authenticated user assuming success, and 
+        (3) info, providing additional info about the authentication process. */
+        if (err) {
+            return res.status(500).send('An error occurred during authentication');
+        }
+        if (!user) {
+            return res.status(401).send('Invalid username or password');
+        }
+
+        // If authentication is successful, regenerate the session ID (recommended for security). So if a user logs out and logs back in, the session ID will be different.
+        req.session.regenerate((error) => {
+            if (error) {
+                return res.status(500).send('An error occurred during session regeneration');
+            }
+
+            // Set user object in the session data
+            req.session.user = {
+                username: user.username,
+                isLoggedIn: true,
+                admin: user.admin,
+                _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
+            };
+
+            res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
+        });
+    })(req, res, next);
+    // I include (req, res, next) at the end to invoke the passport middleware. Without it, I am simply returning the middleware function without invoking it. 
+});
 
 userRouter.route('/logout').get(performLogout).post(performLogout).delete(performLogout);
 
