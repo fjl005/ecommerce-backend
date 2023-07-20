@@ -5,6 +5,7 @@
 (4) CookieParser (to parse/handle HTTP cookies from incoming requests),
 (5) Passport (which was configured from a separate file),
 (6) Sessions from Express (for user authorization),
+(7) CORS (Cross Origin Resource Sharing)
 */
 require('dotenv').config();
 const express = require('express');
@@ -13,6 +14,7 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const passport = require('./passport-config'); // passport was imported in passport-config and configured in that file.
 const session = require('express-session');
+const cors = require('cors');
 
 
 /* STEP TWO: ADD MIDDLEWARES TO THE EXPRESS APP
@@ -21,7 +23,8 @@ const session = require('express-session');
 (2) CookieParser (to access incoming cookies)
 (3) URLEncoded (to handle HTML form data eventually)
 (4) Passport 
-(5) Session for later, because we need to create the Store first.
+(5) CORS (to allow front end web server to run on different port)
+(6) Session for later, because we need to create the Store first.
 
 Middleware functions have access to the request and response objects. App.use() adds this middleware globally to our application.
 */
@@ -29,6 +32,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
+app.use(cors({ origin: 'http://localhost:3000' }))
 
 
 
