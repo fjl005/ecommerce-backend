@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
+const User = require('./models/User');
 
 // Middleware to validate the session
 exports.sessionValidation = (req, res, next) => {
     // Check if the user's session cookie exists
     const sessionIdCookie = req.cookies['connect.sid'];
-    console.log('session id cookie: ', sessionIdCookie);
 
     if (!sessionIdCookie) {
         // The session cookie is not present, so redirect the user to the login page
@@ -32,12 +32,38 @@ exports.sessionValidation = (req, res, next) => {
 };
 
 // Authorization Middleware -- check for Admin
-exports.checkAdmin = (req, res, next) => {
-    if (req.session.user && req.session.user.admin) {
-        next();
-    } else {
-        res.status(403).json({ error: 'Forbidden, Admin Access Required' });
+exports.checkAdmin = async (req, res, next) => {
+
+    try {
+        const sessionId = req.cookies['connect.sid'];
+        const userId = req.cookies['userId'];
+        console.log('sessionId: ', sessionId);
+        console.log('userId', userId);
+
+        // Check if the user has an active session
+        if (!sessionId || !userId) {
+            return res.status(403).json({ error: 'No user logged in' });
+        }
+
+        // Find the user in the database based on the session ID
+        const user = await User.findOne({ _id: userId });
+
+        // Check if the user is an admin
+        if (user && user.admin) {
+            next(); // User is an admin, allow access to the protected route
+        } else {
+            res.status(403).json({ error: 'Forbidden, Admin Access Required' });
+        }
+    } catch (error) {
+        console.error('Error while checking admin access:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
+
+    // if (req.session.user && req.session.user.admin) {
+    //     next();
+    // } else {
+    //     res.status(403).json({ error: 'Forbidden, Admin Access Required' });
+    // }
 };
 
 exports.validateToken = (req, res, next) => {

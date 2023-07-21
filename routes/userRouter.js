@@ -10,7 +10,7 @@ const jwtFile = require('../JWT');
 
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
-        message: 'User Info listed down below'
+        message: 'User Info listed down below',
         // username: req.session.user.username,
         // userID: req.session.user._id,
         // admin: req.session.user.admin
@@ -18,6 +18,8 @@ userRouter.get('/', authenticate.sessionValidation, (req, res) => {
 });
 
 userRouter.post('/', authenticate.sessionValidation, (req, res) => {
+    const sessionIdCookie = req.cookies['connect.sid'];
+
     res.status(200).json({
         message: 'User Info listed down below',
         username: req.session.user.username,
@@ -125,7 +127,8 @@ userRouter.post('/login', (req, res, next) => {
                 _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
             };
 
-            res.cookie('cookie.sid', req.session.id, { httpOnly: true })
+            // I don't think the res.cookie is working right now. Will need to figure this out eventually. For now, I am manually creating the cookie on the client side
+            // res.cookie('cookie.sid', req.session.id, { httpOnly: true, userId: user._id })
 
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });
