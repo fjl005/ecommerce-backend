@@ -11,22 +11,22 @@ const jwtFile = require('../JWT');
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
         message: 'User Info listed down below',
-        // username: req.session.user.username,
-        // userID: req.session.user._id,
-        // admin: req.session.user.admin
-    })
-});
-
-userRouter.post('/', authenticate.sessionValidation, (req, res) => {
-    const sessionIdCookie = req.cookies['connect.sid'];
-
-    res.status(200).json({
-        message: 'User Info listed down below',
         username: req.session.user.username,
         userID: req.session.user._id,
         admin: req.session.user.admin
     })
 });
+
+// userRouter.post('/', authenticate.sessionValidation, (req, res) => {
+//     const sessionIdCookie = req.cookies['connect.sid'];
+
+//     res.status(200).json({
+//         message: 'User Info listed down below',
+//         username: req.session.user.username,
+//         userID: req.session.user._id,
+//         admin: req.session.user.admin
+//     })
+// });
 
 userRouter.post('/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -102,10 +102,9 @@ userRouter.post('/login', (req, res, next) => {
 
     passport.authenticate('local', (err, user, info) => {
         /* (err, user, info) => is the callback function that's run after the authentication process. 
-
-        (1) Err, for any error that occurred during authentication, 
-        (2) user, the authenticated user assuming success, and 
-        (3) info, providing additional info about the authentication process. */
+            (1) Err, for any error that occurred during authentication, 
+            (2) user, the authenticated user assuming success, and 
+            (3) info, providing additional info about the authentication process. */
         if (err) {
             return res.status(500).send('An error occurred during authentication');
         }
@@ -128,8 +127,6 @@ userRouter.post('/login', (req, res, next) => {
             };
 
             // I don't think the res.cookie is working right now. Will need to figure this out eventually. For now, I am manually creating the cookie on the client side
-            // res.cookie('cookie.sid', req.session.id, { httpOnly: true, userId: user._id })
-
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });
     })(req, res, next);
@@ -140,12 +137,14 @@ userRouter.route('/logout').get(performLogout).post(performLogout).delete(perfor
 
 function performLogout(req, res) {
 
-    if (!req.cookies['connect.sid']) {
+    if (!req.session.user) {
         return res.status(200).send('User already logged out');
     }
 
+    // Clear the session cookie on the client-side
     res.clearCookie('connect.sid');
 
+    // Destroy the session data on the server-side
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);

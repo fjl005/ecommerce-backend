@@ -1,11 +1,12 @@
 /* STEP ONE: REQUIRE THE CLASSICS
-
-(1) DOTENV, (2a) Express, (2b) App (to use Express), 
-(3) Mongoose (to interact with MongoDB), 
-(4) CookieParser (to parse/handle HTTP cookies from incoming requests),
-(5) Passport (which was configured from a separate file),
-(6) Sessions from Express (for user authorization),
-(7) CORS (Cross Origin Resource Sharing)
+    (1) DOTENV, 
+    (2a) Express, 
+    (2b) App (to use Express), 
+    (3) Mongoose (to interact with MongoDB), 
+    (4) CookieParser (to parse/handle HTTP cookies from incoming requests),
+    (5) Passport (which was configured from a separate file),
+    (6) Sessions from Express (for user authorization),
+    (7) CORS (Cross Origin Resource Sharing)
 */
 require('dotenv').config();
 const express = require('express');
@@ -18,13 +19,12 @@ const cors = require('cors');
 
 
 /* STEP TWO: ADD MIDDLEWARES TO THE EXPRESS APP
-
-(1) Express.json (parses incoming requests with JSON payloads, attaching it to the req.body property)
-(2) CookieParser (to access incoming cookies)
-(3) URLEncoded (to handle HTML form data eventually)
-(4) Passport 
-(5) CORS (to allow front end web server to run on different port)
-(6) Session for later, because we need to create the Store first.
+    (1) Express.json (parses incoming requests with JSON payloads, attaching it to the req.body property)
+    (2) CookieParser (to access incoming cookies)
+    (3) URLEncoded (to handle HTML form data eventually)
+    (4) Passport 
+    (5) CORS (to allow front end web server to run on different port)
+    (6) Session for later, because we need to create the Store first.
 
 Middleware functions have access to the request and response objects. App.use() adds this middleware globally to our application.
 */
@@ -35,7 +35,6 @@ app.use(passport.initialize());
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000',
-    // methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
 }));
 
 
@@ -70,7 +69,7 @@ app.use(session({
     // Defines options for our cookie
     cookie: {
         // maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
-        maxAge: 1000 * 15, // 5 seconds
+        maxAge: 1000 * 60 * 60, // 1 hour
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
         httpOnly: true,
@@ -92,7 +91,6 @@ router.use('/users', userRouter);
 
 
 /* STEP FIVE: INCLUDE MISCELLANEOUS IMPORTS. */
-// const sessionValidation = require('./sessionValidation');
 const authenticate = require('./authenticate');
 
 

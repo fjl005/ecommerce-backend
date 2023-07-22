@@ -3,69 +3,39 @@ const User = require('./models/User');
 
 // Middleware to validate the session
 exports.sessionValidation = (req, res, next) => {
-    // Check if the user's session cookie exists
-    const sessionIdCookie = req.cookies['connect.sid'];
-
-    if (!sessionIdCookie) {
-        // The session cookie is not present, so redirect the user to the login page
+    if (!req.session.user) {
         return res.status(400).send('You must log in before accessing this page');
     }
 
-    // Retrieve the session data from the database using the session ID
+    // Retrieve the session data from mongo db store.
     const store = req.sessionStore; // Access the session store from the request
-    store.get(sessionIdCookie, (error, session) => {
-        if (error || !session || !session.user) {
-            // The session data is not valid or doesn't exist, so redirect the user to the login page
+    store.get(req.session.id, (error, session) => {
+        if (error || !session) {
+            // We probably won't make it here because of the first if condition for req.session.user.
             return res.status(400).send('You must log in before accessing this page');
         }
-        // The session is valid, so allow the user to proceed
         next();
     });
-
-    // if (req.session.user) {
-    //     // The session is valid, so allow the user to proceed
-    //     next();
-    // } else {
-    //     // The session is invalid or not present, so redirect the user to the login page
-    //     res.status(400).send('You must log in before accessing this page');
-    // }
 };
 
 // Authorization Middleware -- check for Admin
-exports.checkAdmin = async (req, res, next) => {
-
-    try {
-        const sessionId = req.cookies['connect.sid'];
-        const userId = req.cookies['userId'];
-        console.log('sessionId: ', sessionId);
-        console.log('userId', userId);
-
-        // Check if the user has an active session
-        if (!sessionId || !userId) {
-            return res.status(403).json({ error: 'No user logged in' });
-        }
-
-        // Find the user in the database based on the session ID
-        const user = await User.findOne({ _id: userId });
-
-        // Check if the user is an admin
-        if (user && user.admin) {
-            next(); // User is an admin, allow access to the protected route
-        } else {
-            res.status(403).json({ error: 'Forbidden, Admin Access Required' });
-        }
-    } catch (error) {
-        console.error('Error while checking admin access:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+exports.checkAdmin = (req, res, next) => {
+    if (!req.session.user) {
+        return res.status(401).send('You are not logged in; and therefore not the admin');
     }
 
-    // if (req.session.user && req.session.user.admin) {
-    //     next();
-    // } else {
-    //     res.status(403).json({ error: 'Forbidden, Admin Access Required' });
-    // }
+    const store = req.sessionStore;
+    store.get(req.session.id, (error, session) => {
+        if (error || !session.user.admin) {
+            return res.status(403).send('You are not the admin!');
+        }
+        next();
+    });
+    console.error('Error while checking admin access:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
 };
 
+// Validate JWT Token -- not really used because I transitioned to using Sessions instead. 
 exports.validateToken = (req, res, next) => {
     // Accesstoken is stored in the headers, and RefreshToken is stored in the cookie. Remember that for the headers, the access token is in the 'authorization' property, but is stored as 'Bearer {accessToken}'.
     const authHeader = req.headers.authorization;
