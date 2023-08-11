@@ -31,8 +31,6 @@ exports.checkAdmin = (req, res, next) => {
         }
         next();
     });
-    console.error('Error while checking admin access:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
 };
 
 // Validate JWT Token -- not really used because I transitioned to using Sessions instead. 

@@ -13,7 +13,13 @@ const userSchema = new mongoose.Schema({
     admin: {
         type: Boolean,
         default: false
-    }
+    },
+    cart: [{
+        type: String
+    }],
+    saved: [{
+        type: String
+    }]
 });
 
 const User = mongoose.model('User', userSchema);

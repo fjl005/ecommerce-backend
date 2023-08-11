@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const authenticate = require('../authenticate');
 const jwtFile = require('../JWT');
+const Product = require('../models/Product');
 
 
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
@@ -201,6 +202,20 @@ userRouter.delete('/:id', authenticate.checkAdmin, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+userRouter.post('/cart/add/:id', authenticate.sessionValidation, async (req, res) => {
+    const productId = req.params.id;
+
+    try {
+        const product = await Product.findById(productId);
+        if (product.length === 0) {
+            return res.status(404).json({ message: 'No products found for the given username.' });
+        }
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
