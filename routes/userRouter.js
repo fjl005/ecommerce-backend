@@ -209,14 +209,45 @@ userRouter.post('/cart/add/:id', authenticate.sessionValidation, async (req, res
     const productId = req.params.id;
 
     try {
-        const product = await Product.findById(productId);
-        if (product.length === 0) {
-            return res.status(404).json({ message: 'No products found for the given username.' });
-        }
-        res.json(product);
+        const userId = req.session.user._id.toString();
+        const updatedUser = await User.findByIdAndUpdate(
+            { _id: userId },
+            { $push: { cart: productId } },
+            { new: true },
+        );
+
+        console.log('did this work?')
+
+        res.json(updatedUser);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+userRouter.delete('/cart/add/:id', authenticate.sessionValidation, async (req, res) => {
+    const productId = req.params.id;
+
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(userId);
+
+        // Find the index of the first occurrence of the product, since the same item may be added in the cart multiple times.
+        const indexOfProduct = user.cart.indexOf(productId);
+
+        if (indexOfProduct !== -1) {
+            // If it exist, then remove just that one item from the cart. 
+            user.cart.splice(indexOfProduct, 1);
+            // Save the updated user
+            const updatedUser = await user.save();
+            res.json(updatedUser);
+        } else {
+            res.status(404).json({ message: 'Product not found in cart.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
 
 module.exports = userRouter;
