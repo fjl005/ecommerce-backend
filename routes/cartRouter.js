@@ -77,16 +77,19 @@ cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) =
 
     try {
         const userId = req.session.user._id.toString();
-        const updatedUser = await User.findByIdAndUpdate(
-            { _id: userId },
-            {
-                $pull: { cart: productId },
-                $addToSet: { saved: productId }
-            },
-            { new: true },
-        );
+        const user = await User.findById(userId);
+        const indexOfProduct = user.cart.indexOf(productId);
+        console.log('user: ', user);
 
-        res.json(updatedUser);
+        if (indexOfProduct !== -1) {
+            user.cart.splice(indexOfProduct, 1);
+            user.saved.push(productId);
+            const updatedUser = await user.save();
+            res.json(updatedUser);
+        } else {
+            return res.status(404).json({ message: 'Product cannot be saved' });
+        }
+
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }

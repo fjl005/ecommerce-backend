@@ -19,6 +19,21 @@ const userSchema = new mongoose.Schema({
     }],
     saved: [{
         type: String
+    }],
+    mastercard: {
+        email: String,
+        cardExpires: String,
+        cardNumber: Number,
+        cardCVC: Number,
+        firstName: String,
+        lastName: String,
+        streetAddress: String,
+        city: String,
+        state: String,
+        zipCode: Number
+    },
+    orders: [{
+        type: String
     }]
 });
 
