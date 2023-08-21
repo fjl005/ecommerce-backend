@@ -80,9 +80,6 @@ productsRouter.post('/verifyCard', async (req, res) => {
                 },
                 { new: true },
             );
-            // user.orders.push(user.cart);
-            // user.cart = [];
-            // await user.save();
 
             console.log('user: ', updatedUser);
 
