@@ -45,6 +45,29 @@ productsRouter.post('/', async (req, res) => {
     }
 });
 
+productsRouter.get('/orders', async (req, res) => {
+    console.log('is this working')
+
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(userId);
+
+        const orders = user.orders;
+        console.log('here')
+
+        if (orders) {
+            return res.json(orders);
+        }
+
+        return res.send('No orders');
+    } catch (error) {
+        console.log('ayo')
+        // res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'haha' });
+
+    }
+});
+
 productsRouter.post('/verifyCard', async (req, res) => {
     try {
         const userId = req.session.user._id.toString();
@@ -92,6 +115,8 @@ productsRouter.post('/verifyCard', async (req, res) => {
     } catch (error) {
         res.status(500).send('Sorry there was an error with your card.');
     }
-})
+});
+
+
 
 module.exports = productsRouter;

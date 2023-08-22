@@ -82,6 +82,7 @@ const router = express.Router();
 const productsRouter = require('./routes/productsRouter');
 const userRouter = require('./routes/userRouter');
 const cartRouter = require('./routes/cartRouter');
+const ordersRouter = require('./routes/ordersRouter');
 
 
 // Mount the router onto the app so we can use the routes.
@@ -90,6 +91,8 @@ app.use('/', router);
 router.use('/products', productsRouter);
 router.use('/users', userRouter);
 router.use('/cart', cartRouter);
+router.use('/orders', ordersRouter);
+
 
 
 
