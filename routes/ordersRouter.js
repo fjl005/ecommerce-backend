@@ -2,8 +2,9 @@ const express = require('express');
 const ordersRouter = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const authenticate = require('../authenticate');
 
-ordersRouter.get('/', async (req, res) => {
+ordersRouter.get('/', authenticate.sessionValidation, async (req, res) => {
 
     try {
         const userId = req.session.user._id.toString();
