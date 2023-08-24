@@ -124,7 +124,10 @@ userRouter.post('/login', (req, res, next) => {
                 username: user.username,
                 isLoggedIn: true,
                 admin: user.admin,
-                _id: user._id, // Assuming you have a unique identifier for the user in your MongoDB User model
+                _id: user._id,
+                cart: user.cart,
+                saved: user.saved,
+                orders: user.orders
             };
 
             // I don't think the res.cookie is working right now. Will need to figure this out eventually. For now, I am manually creating the cookie on the client side
