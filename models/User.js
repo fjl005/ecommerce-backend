@@ -1,11 +1,5 @@
 const mongoose = require('mongoose');
 
-const productSchema = new mongoose.Schema({
-    name: String,
-    price: Number,
-    description: String,
-    fileType: String
-})
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -22,10 +16,7 @@ const userSchema = new mongoose.Schema({
         default: false
     },
     cart: [{
-        name: String,
-        price: Number,
-        description: String,
-        fileType: String
+        type: String,
     }],
     saved: [{
         type: String
@@ -47,9 +38,9 @@ const userSchema = new mongoose.Schema({
             name: String,
             price: Number,
             description: String,
-            fileType: String
+            productType: String
         }],
-        orderDate: String
+        orderDate: Date
     }]
 });
 

@@ -13,14 +13,13 @@ ordersRouter.get('/', authenticate.sessionValidation, async (req, res) => {
         const orders = user.orders;
 
         if (orders) {
+            orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
             return res.json(orders);
         }
 
         return res.send('No orders');
     } catch (error) {
-        console.log('ayo')
         res.status(500).json({ message: 'Server error' });
-
     }
 });
 

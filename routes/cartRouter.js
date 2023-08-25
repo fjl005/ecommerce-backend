@@ -20,85 +20,123 @@ cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
-cartRouter.post('/', authenticate.sessionValidation, async (req, res) => {
-    const data = req.body.product;
-    console.log('data: ', data);
-    const product = {
-        name: data.name,
-        price: data.price,
-        description: data.description,
-        productType: data.productType
-    }
-
-    console.log('product: ', product);
+cartRouter.post('/:id', authenticate.sessionValidation, async (req, res) => {
+    const productId = req.params.id;
+    console.log('product Id: ', productId);
 
     try {
         const userId = req.session.user._id.toString();
         const updatedUser = await User.findByIdAndUpdate(
             { _id: userId },
-            {
-                $push: { cart: product }
-            },
+            { $push: { cart: productId } },
             { new: true },
         );
+
         console.log('updated user: ', updatedUser);
 
         res.json(updatedUser);
     } catch (error) {
-        console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
+// cartRouter.post('/', authenticate.sessionValidation, async (req, res) => {
+//     const data = req.body.product;
+//     console.log('data: ', data);
+//     const product = {
+//         name: data.name,
+//         price: data.price,
+//         description: data.description,
+//         productType: data.productType
+//     }
+
+//     console.log('product: ', product);
+
+//     try {
+//         const userId = req.session.user._id.toString();
+//         const updatedUser = await User.findByIdAndUpdate(
+//             { _id: userId },
+//             {
+//                 $push: { cart: product }
+//             },
+//             { new: true },
+//         );
+//         console.log('updated user: ', updatedUser);
+
+//         res.json(updatedUser);
+//     } catch (error) {
+//         console.log('error: ', error);
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// });
+
 cartRouter.delete('/:id', authenticate.sessionValidation, async (req, res) => {
-    const cartItemId = req.params.id;
+    const productId = req.params.id;
 
     try {
         const userId = req.session.user._id.toString();
         const user = await User.findById(userId);
 
         // Find the index of the first occurrence of the product, since the same item may be added in the cart multiple times.
-        // const indexOfProduct = user.cart.indexOf(productId);
+        const indexOfProduct = user.cart.indexOf(productId);
 
-        // Filter out the cart item with the specified _id
-        const originalCartLength = user.cart.length;
-
-        user.cart = user.cart.filter((cartItem) => {
-            return cartItem._id.toString() !== cartItemId;
-        });
-        // console.log('filtered cart length: ', filteredCart);
-        await user.save();
-        res.json(user);
-
-        // Check if the cart item was found and removed
-        // if (filteredCart.length !== originalCartLength) {
-        //     // Save the updated user
-        //     user.cart = filteredCart;
-        //     const updatedUser = await user.save();
-        //     res.json(updatedUser);
-        // } else {
-        //     res.status(404).json({ message: 'Product not found in cart.' });
-        // }
-
-        // user.cart.filter((cartItem) => cartItem._id === cartItemId);
-
-
-        // if (indexOfProduct !== -1) {
-        //     // If it exist, then remove just that one item from the cart. 
-        //     user.cart.splice(indexOfProduct, 1);
-        //     // Save the updated user
-        //     const updatedUser = await user.save();
-        //     res.json(updatedUser);
-        // } else {
-        //     res.status(404).json({ message: 'Product not found in cart.' });
-        // }
+        if (indexOfProduct !== -1) {
+            // If it exist, then remove just that one item from the cart. 
+            user.cart.splice(indexOfProduct, 1);
+            // Save the updated user
+            const updatedUser = await user.save();
+            res.json(updatedUser);
+        } else {
+            res.status(404).json({ message: 'Product not found in cart.' });
+        }
     } catch (error) {
-        console.log('made it here')
-        console.log('error: ', error);
-
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// cartRouter.delete('/:id', authenticate.sessionValidation, async (req, res) => {
+//     const cartItemId = req.params.id;
+
+//     try {
+//         const userId = req.session.user._id.toString();
+//         const user = await User.findById(userId);
+
+//         user.cart = user.cart.filter((cartItem) => {
+//             return cartItem._id.toString() !== cartItemId;
+//         });
+//         // console.log('filtered cart length: ', filteredCart);
+//         await user.save();
+//         res.json(user);
+
+//         // Check if the cart item was found and removed
+//         // if (filteredCart.length !== originalCartLength) {
+//         //     // Save the updated user
+//         //     user.cart = filteredCart;
+//         //     const updatedUser = await user.save();
+//         //     res.json(updatedUser);
+//         // } else {
+//         //     res.status(404).json({ message: 'Product not found in cart.' });
+//         // }
+
+//         // user.cart.filter((cartItem) => cartItem._id === cartItemId);
+
+
+//         // if (indexOfProduct !== -1) {
+//         //     // If it exist, then remove just that one item from the cart. 
+//         //     user.cart.splice(indexOfProduct, 1);
+//         //     // Save the updated user
+//         //     const updatedUser = await user.save();
+//         //     res.json(updatedUser);
+//         // } else {
+//         //     res.status(404).json({ message: 'Product not found in cart.' });
+//         // }
+//     } catch (error) {
+//         console.log('made it here')
+//         console.log('error: ', error);
+
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// });
 
 cartRouter.get('/saved', authenticate.sessionValidation, async (req, res) => {
     try {
@@ -135,6 +173,57 @@ cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) =
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+// cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) => {
+//     const cartItemId = req.params.id;
+
+//     try {
+//         const userId = req.session.user._id.toString();
+//         const user = await User.findById(userId);
+
+//         const productToSave = user.cart.filter((cartItem) => {
+//             return cartItem._id.toString() === cartItemId;
+//         });
+//         console.log('found product: ', productToSave);
+
+
+//         if (productToSave) {
+//             user.saved.push(productToSave[0]);
+//             user.cart = user.cart.filter((cartItem) => {
+//                 return cartItem._id.toString() !== cartItemId;
+//             });
+
+//             try {
+//                 await user.save();
+//                 console.log('3');
+//                 res.json(user);
+//             } catch (error) {
+//                 console.error('Error saving user:', error);
+//             }
+
+//             res.json(user);
+//         } else {
+//             return res.status(404).json({ message: 'Product cannot be saved' });
+//         }
+
+
+
+//         // const indexOfProduct = user.cart.indexOf(productId);
+//         // console.log('user: ', user);
+
+//         // if (indexOfProduct !== -1) {
+//         //     user.cart.splice(indexOfProduct, 1);
+//         //     user.saved.push(productId);
+//         //     const updatedUser = await user.save();
+//         //     res.json(updatedUser);
+//         // } else {
+//         //     return res.status(404).json({ message: 'Product cannot be saved' });
+//         // }
+
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// });
 
 cartRouter.delete('/saved/:id', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.id;

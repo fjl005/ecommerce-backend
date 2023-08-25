@@ -95,16 +95,44 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
             */
             const cart = user.cart;
+            const cartInfoByProduct = [];
+
+
+            // Create an array to store the promises
+            const promises = [];
+
+            for (const productIdObject of cart) {
+                const productId = productIdObject.toString();
+                try {
+                    const promise = await Product.findById(productId);
+                    console.log('promise: ', promise);
+                    promises.push(promise);
+
+                    cartInfoByProduct.push({
+                        name: promise.name,
+                        price: promise.price,
+                        description: promise.description,
+                        productType: promise.productType
+                    });
+
+                } catch (error) {
+                    console.log('error: ', error);
+                }
+            }
+
+            await Promise.all(promises);
 
             const currentDate = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const dateFormatter = new Intl.DateTimeFormat('en-US', options);
+            // const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            // const dateFormatter = new Intl.DateTimeFormat('en-US', options);
+
+            console.log('cart info to add: ', cartInfoByProduct);
 
             const orderAdded = {
-                items: cart,
-                orderDate: dateFormatter.format(currentDate),
+                items: cartInfoByProduct,
+                orderDate: currentDate,
             }
-            console.log('order added: ', orderAdded);
+
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: userId },
                 {
