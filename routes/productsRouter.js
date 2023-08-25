@@ -95,10 +95,20 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
             */
             const cart = user.cart;
+
+            const currentDate = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const dateFormatter = new Intl.DateTimeFormat('en-US', options);
+
+            const orderAdded = {
+                items: cart,
+                orderDate: dateFormatter.format(currentDate),
+            }
+            console.log('order added: ', orderAdded);
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: userId },
                 {
-                    $push: { orders: cart },
+                    $push: { orders: orderAdded },
                     $set: { "cart": [] },
                 },
                 { new: true },
