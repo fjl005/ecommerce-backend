@@ -40,7 +40,8 @@ const userSchema = new mongoose.Schema({
             description: String,
             productType: String
         }],
-        orderDate: Date
+        orderDate: Date,
+        totalCost: Number
     }]
 });
 

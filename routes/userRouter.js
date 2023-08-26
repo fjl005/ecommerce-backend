@@ -161,7 +161,7 @@ function performLogout(req, res) {
 
 userRouter.post('/admin', authenticate.checkAdmin, (req, res) => {
     res.send('You are the admin!');
-})
+});
 
 // THE BELOW WILL NEED TO BE USED FOR ADMIN, WILL NEED TO UPDATE USER AUTHORIZATION SOON!!!
 userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {

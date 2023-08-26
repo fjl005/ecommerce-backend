@@ -123,14 +123,13 @@ productsRouter.post('/verifyCard', async (req, res) => {
             await Promise.all(promises);
 
             const currentDate = new Date();
-            // const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            // const dateFormatter = new Intl.DateTimeFormat('en-US', options);
 
             console.log('cart info to add: ', cartInfoByProduct);
 
             const orderAdded = {
                 items: cartInfoByProduct,
                 orderDate: currentDate,
+                totalCost: req.body.totalCost
             }
 
             const updatedUser = await User.findByIdAndUpdate(

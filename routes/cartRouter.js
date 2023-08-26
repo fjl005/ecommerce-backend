@@ -12,8 +12,6 @@ cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
             { _id: userId }
         );
 
-        console.log('user cart', user.cart);
-
         res.json({ cart: user.cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
