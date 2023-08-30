@@ -31,14 +31,14 @@ userRouter.get('/', authenticate.sessionValidation, (req, res) => {
 
 userRouter.post('/signup', async (req, res) => {
     const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).send('User and password fields are both required');
+    }
+
     if (password.length < 6) {
         return res.status(400).send('Password needs to be more than 6 characters');
     }
-
     try {
-        if (!username || !password) {
-            return res.status(400).send('User and password fields are required');
-        }
         // genSalt generates the salt. Default parameter is 10. The higher the number, the more secure it will be, but it will take longer. 10 takes a few seconds, but 20-30 can take a few days. Let's just go with the default. The salt will be automatically stored in the hashedPassword
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -48,17 +48,13 @@ userRouter.post('/signup', async (req, res) => {
 
         const newUser = { username: username, password: hashedPassword };
 
-        User.create(newUser)
-            .then(() => {
-                return res.json('User Registered!');
-            }).catch((err) => {
-                if (err.code = 11000) {
-                    return res.status(400).send('The username already exists');
-                }
-                return res.status(400).json({ error: err })
-            })
+        await User.create(newUser);
+        return res.json('User Registered!');
     } catch (error) {
-        res.status(500).send('Sorry there was an error. Please try again. Make sure you have the username and password both filled out.');
+        if (error.code === 11000) {
+            return res.status(400).send('The username already exists');
+        }
+        return res.status(400).json({ error: err });
     }
 });
 
