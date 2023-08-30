@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema({
     saved: [{
         type: String
     }],
+    favorites: [{
+        type: String
+    }],
     mastercard: {
         email: String,
         cardExpires: String,
