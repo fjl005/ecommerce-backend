@@ -84,6 +84,7 @@ const userRouter = require('./routes/userRouter');
 const cartRouter = require('./routes/cartRouter');
 const ordersRouter = require('./routes/ordersRouter');
 const favoritesRouter = require('./routes/favoritesRouter');
+const reviewsRouter = require('./routes/reviewsRouter');
 
 
 // Mount the router onto the app so we can use the routes.
@@ -94,7 +95,7 @@ router.use('/users', userRouter);
 router.use('/cart', cartRouter);
 router.use('/orders', ordersRouter);
 router.use('/favorites', favoritesRouter);
-
+router.use('/reviews', reviewsRouter);
 
 
 /* STEP FIVE: INCLUDE MISCELLANEOUS IMPORTS. */

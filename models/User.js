@@ -38,10 +38,15 @@ const userSchema = new mongoose.Schema({
     },
     orders: [{
         items: [{
+            productId: String,
             name: String,
             price: Number,
             description: String,
-            productType: String
+            productType: String,
+            hasReview: {
+                type: Boolean,
+                default: false
+            }
         }],
         orderDate: Date,
         totalCost: Number

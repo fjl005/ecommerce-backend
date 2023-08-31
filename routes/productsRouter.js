@@ -109,6 +109,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
                     promises.push(promise);
 
                     cartInfoByProduct.push({
+                        productId: promise._id.toString(),
                         name: promise.name,
                         price: promise.price,
                         description: promise.description,
