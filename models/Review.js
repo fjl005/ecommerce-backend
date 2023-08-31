@@ -9,6 +9,10 @@ const reviewSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    purchaseId: {
+        type: String,
+        required: true,
+    },
     starRating: {
         type: Number,
         required: true,
