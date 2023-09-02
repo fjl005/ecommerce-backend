@@ -15,25 +15,8 @@ reviewsRouter.get('/', async (req, res) => {
     }
 });
 
-reviewsRouter.get('/:purchaseId', async (req, res) => {
-    const purchaseId = req.params.purchaseId;
-
-    try {
-        const review = await Review.findOne({ purchaseId });
-
-        if (review) {
-            res.json(review);
-        } else {
-            res.status(404).json({ message: 'Review not found' });
-        }
-    } catch (error) {
-        console.log('error: ', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
 reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
-    const { productId, starRating, ratingDescription, currentDate, orderId, purchaseId } = req.body;
+    const { productId, starRating, ratingDescription, currentDate, orderId, purchasedItemId } = req.body;
 
     let username;
     if (req.session.user) {
@@ -41,26 +24,28 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     }
 
     try {
-        const existingReview = await Review.findOne({ username, purchaseId });
+        let review = await Review.findOne({ purchasedItemId: purchasedItemId });
+        console.log('review: ', review);
 
-        // COMMENTED OUT FOR DEBUGGING PURPOSES!!!
+        if (review) {
+            review.productId = productId;
+            review.starRating = starRating;
+            review.ratingDescription = ratingDescription;
+            review.currentDate = currentDate;
+        } else {
+            review = new Review({
+                username,
+                productId,
+                purchasedItemId,
+                starRating,
+                ratingDescription,
+                currentDate
+            });
+        }
 
-        // if (existingReview) {
-        //     return res.status(400).send('A review by the same person for this product already exists.');
-        // }
+        await review.save();
 
-        const newReview = new Review({
-            username,
-            productId,
-            purchaseId,
-            starRating,
-            ratingDescription,
-            currentDate
-        });
-
-        await newReview.save();
-
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username: username });
         const orders = user.orders;
 
         let foundProduct = null;
@@ -68,7 +53,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
         for (const order of orders) {
             if (order._id.toString() === orderId) {
                 for (const product of order.items) {
-                    if (product._id.toString() === purchaseId) {
+                    if (product._id.toString() === purchasedItemId) {
                         foundProduct = product;
                         foundProduct.hasReview = true;
 
@@ -97,6 +82,80 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     } catch (error) {
         console.log('error: ', error);
         res.status(500).send('There was a problem with the server.');
+    }
+});
+
+reviewsRouter.get('/:purchasedItemId', async (req, res) => {
+    const purchasedItemId = req.params.purchasedItemId;
+
+    try {
+        const review = await Review.findOne({
+            purchasedItemId: purchasedItemId
+        });
+
+        if (review) {
+            console.log('review: ', review);
+            res.json(review);
+        } else {
+            res.status(404).json({ message: 'Review not found' });
+        }
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+reviewsRouter.delete('/:purchasedItemId', async (req, res) => {
+    const purchasedItemId = req.params.purchasedItemId;
+
+
+    let username;
+    if (req.session.user) {
+        username = req.session.user.username;
+    }
+
+    try {
+        const review = await Review.findOne({ purchasedItemId: purchasedItemId });
+
+        if (review) {
+            await Review.findByIdAndRemove(review._id);
+            console.log('deleted')
+            res.status(200).json({ message: 'Review deleted successfully.' });
+        } else {
+            console.log('not deleted')
+            console.log('review: ', review);
+            res.status(404).json({ message: 'Review not found.' });
+        }
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+
+    const user = await User.findOne({ username: username });
+    const orders = user.orders;
+
+    let foundProduct = null;
+
+    for (const order of orders) {
+        if (order._id.toString() === purchasedItemId) {
+            for (const product of order.items) {
+                if (product._id.toString() === purchasedItemId) {
+                    foundProduct = product;
+                    foundProduct.hasReview = false;
+
+                    try {
+                        await user.save();
+                        console.log('User object updated with product review status.');
+                    } catch (error) {
+                        console.log('Error updating user:', error);
+                    }
+                    break;
+                }
+            }
+            if (foundProduct) {
+                break;
+            }
+        }
     }
 });
 
