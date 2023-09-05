@@ -36,6 +36,31 @@ favoritesRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req, res) => {
+    const productId = req.params.productId;
+
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(userId);
+
+        console.log('user favorites: ', user.favorites);
+        console.log('product Id: ', productId);
+
+        const indexOfProduct = user.favorites.indexOf(productId);
+
+        if (indexOfProduct !== -1) {
+            user.favorites.splice(indexOfProduct, 1);
+            const updatedUser = await user.save();
+            return res.json(updatedUser);
+        }
+        return res.status(404).json({ message: 'Product not found in Favorites.' });
+
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
+    }
+});
+
 favoritesRouter.get('/:productId', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.productId;
 
@@ -49,6 +74,31 @@ favoritesRouter.get('/:productId', authenticate.sessionValidation, async (req, r
         res.status(500).json({ message: 'Server error' });
     }
 });
+
+
+favoritesRouter.post('/cart/:productId', authenticate.sessionValidation, async (req, res) => {
+    const productId = req.params.productId;
+
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(userId);
+
+        const indexOfProduct = user.favorites.indexOf(productId);
+
+        if (indexOfProduct !== -1) {
+            user.favorites.splice(indexOfProduct, 1);
+            user.cart.push(productId);
+            const updatedUser = await user.save();
+            return res.json(updatedUser);
+        }
+        return res.status(404).json({ message: 'Product cannot be added to Cart from Favorites.' });
+
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
+    }
+});
+
 
 
 
