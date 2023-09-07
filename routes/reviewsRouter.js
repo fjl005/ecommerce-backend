@@ -15,6 +15,17 @@ reviewsRouter.get('/', async (req, res) => {
     }
 });
 
+reviewsRouter.get('/user/:username', async (req, res) => {
+    const username = req.params.username;
+
+    try {
+        const reviews = await Review.find({ username: username });
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     const { productId, starRating, ratingDescription, currentDate, orderId, purchasedItemId } = req.body;
 
