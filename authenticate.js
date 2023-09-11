@@ -4,6 +4,7 @@ const User = require('./models/User');
 // Middleware to validate the session
 exports.sessionValidation = (req, res, next) => {
     if (!req.session.user) {
+        console.log('req session: ', req.session);
         return res.status(400).send('You must log in before accessing this page');
     }
 

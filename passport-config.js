@@ -11,6 +11,8 @@ const User = require('./models/User');
 
 // Done is a callback function that takes three parameters: (1) error (null if no error), (2) user (false if no user), and (3) message (to display the error).
 passport.use(new LocalStrategy({ usernameField: 'username' }, (username, password, done) => {
+    console.log('username: ', username);
+    console.log('password: ', password);
     // Find the user in the database based on the provided username
     User.findOne({ username: username })
         .then(user => {
@@ -23,9 +25,11 @@ passport.use(new LocalStrategy({ usernameField: 'username' }, (username, passwor
                 if (error) throw error;
                 if (isMatch) {
                     // If the passwords match, return the user object
+                    console.log('matched');
                     return done(null, user);
                 } else {
                     // If the passwords don't match, return an error indicating incorrect password
+                    console.log('not a match');
                     return done(null, false, { message: 'Password incorrect' });
                 }
             });

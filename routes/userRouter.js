@@ -18,6 +18,95 @@ userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     })
 });
 
+userRouter.post('/updateUsername', authenticate.sessionValidation, async (req, res) => {
+    const newUsername = req.body.newUsername;
+    const currentUsername = req.session.user.username;
+
+    try {
+        const usernameInDB = await User.findOne({ username: newUsername });
+        console.log('usernameInDB', usernameInDB);
+
+        if (usernameInDB) {
+            return res.status(400).send('Username already exists');
+        }
+
+        const user = await User.findOne({ username: currentUsername });
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        user.username = newUsername;
+        await user.save();
+
+        req.session.user.username = newUsername;
+
+        res.status(200).json({
+            message: 'Username updated successfully',
+            userInfo: user,
+            newSessionInfo: req.session.user
+        });
+
+    } catch (error) {
+        console.log('error with post (/users/updateUsername)', error);
+    }
+
+});
+
+userRouter.post('/updatePassword', authenticate.sessionValidation, async (req, res) => {
+    const { username, password, newPW, reEnterPW } = req.body;
+
+    // First, check if the new passwords match
+    if (newPW !== reEnterPW) {
+        return res.status(401).send('New passwords do not match');
+    }
+
+    if (password === newPW) {
+        return res.status(401).send('Cannot use same password');
+    }
+
+    // Function to update the password
+    const updatePassword = async (username, newPassword) => {
+        try {
+            const salt = await bcrypt.genSalt();
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+            const currentUser = await User.findOne({ username });
+
+            if (!currentUser) {
+                return res.status(404).send('User not found');
+            }
+
+            currentUser.password = hashedPassword;
+            await currentUser.save();
+
+            return currentUser;
+        } catch (error) {
+            console.log('error in updatePassword() in userRouter .post/updatePassword: ', error);
+        }
+    };
+
+    passport.authenticate('local', async (err, user, info) => {
+        if (err) {
+            return res.status(500).send('An error occurred during authentication');
+        }
+        if (!user) {
+            return res.status(401).send('Invalid password');
+        }
+
+        try {
+            const updatedUser = await updatePassword(username, newPW);
+            res.status(200).json({
+                message: 'Password updated successfully',
+                userInfo: updatedUser,
+            });
+        } catch (error) {
+            console.log('Error updating password: ', error);
+            res.status(500).send('An error occurred while updating the password');
+        }
+    })(req, res);
+});
+
+
 // userRouter.post('/', authenticate.sessionValidation, (req, res) => {
 //     const sessionIdCookie = req.cookies['connect.sid'];
 
