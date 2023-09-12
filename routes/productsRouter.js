@@ -13,14 +13,12 @@ productsRouter.get('/', async (req, res) => {
 });
 
 productsRouter.get('/:productId', async (req, res) => {
-    console.log('hello?')
     const productId = req.params.productId;
     try {
         const product = await Product.findById(productId);
         if (product.length === 0) {
             return res.status(404).json({ message: 'No products found for the given username.' });
         }
-        console.log('product: ', product);
         res.json(product);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -48,14 +46,12 @@ productsRouter.post('/', async (req, res) => {
 });
 
 productsRouter.get('/orders', async (req, res) => {
-    console.log('is this working')
 
     try {
         const userId = req.session.user._id.toString();
         const user = await User.findById(userId);
 
         const orders = user.orders;
-        console.log('here')
 
         if (orders) {
             return res.json(orders);
@@ -63,7 +59,6 @@ productsRouter.get('/orders', async (req, res) => {
 
         return res.send('No orders');
     } catch (error) {
-        console.log('ayo')
         // res.status(500).json({ message: 'Server error' });
         res.status(500).json({ message: 'haha' });
 

@@ -24,7 +24,6 @@ userRouter.post('/updateUsername', authenticate.sessionValidation, async (req, r
 
     try {
         const usernameInDB = await User.findOne({ username: newUsername });
-        console.log('usernameInDB', usernameInDB);
 
         if (usernameInDB) {
             return res.status(400).send('Username already exists');
@@ -266,13 +265,13 @@ userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
     }
 });
 
-userRouter.delete('/:id', authenticate.checkAdmin, async (req, res) => {
+userRouter.delete('/:username', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userIdToDelete = req.params.id;
+        // const userIdToDelete = req.params.id;
+        const userIdToDelete = req.session.user._id.toString();
 
         // Find the user by ID
         const userToDelete = await User.findById(userIdToDelete);
-        console.log('user to delete: ', userToDelete);
 
         if (!userToDelete) {
             return res.status(404).json({ error: 'User not found.' });

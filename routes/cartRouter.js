@@ -18,6 +18,26 @@ cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+cartRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart = [];
+        await user.save();
+
+        res.json({ message: 'Cart deleted successfully', cart: user.cart });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 cartRouter.post('/:id', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.id;
 
@@ -72,6 +92,69 @@ cartRouter.get('/saved', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+
+cartRouter.delete('/all/saved', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.saved = [];
+        await user.save();
+
+        res.json({ message: 'Saved deleted successfully', saved: user.saved });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+cartRouter.post('/all/tocart', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart.push(...user.saved);
+        user.saved = [];
+        await user.save();
+
+        res.json({ message: 'Saved items moved to cart successfully', saved: user.saved, cart: user.cart });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+cartRouter.post('/all/tosaved', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.saved.push(...user.cart);
+        user.cart = [];
+        await user.save();
+
+        res.json({ message: 'Saved items moved to cart successfully', saved: user.saved, cart: user.cart });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.id;
 
@@ -79,7 +162,6 @@ cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) =
         const userId = req.session.user._id.toString();
         const user = await User.findById(userId);
         const indexOfProduct = user.cart.indexOf(productId);
-        console.log('user: ', user);
 
         if (indexOfProduct !== -1) {
             user.cart.splice(indexOfProduct, 1);

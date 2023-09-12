@@ -43,9 +43,6 @@ favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req
         const userId = req.session.user._id.toString();
         const user = await User.findById(userId);
 
-        console.log('user favorites: ', user.favorites);
-        console.log('product Id: ', productId);
-
         const indexOfProduct = user.favorites.indexOf(productId);
 
         if (indexOfProduct !== -1) {
