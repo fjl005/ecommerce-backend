@@ -27,17 +27,21 @@ productsRouter.get('/:productId', async (req, res) => {
 
 
 productsRouter.post('/', async (req, res) => {
+    console.log('?')
+    const { name, price, description, productType } = req.body;
     try {
         const newProduct = {
-            name: 'Two Page Airbnb Template',
-            price: 4.50,
-            description: 'This is my product description nice.',
-            type: 'Digital',
+            name,
+            price,
+            description,
+            productType,
         };
+        console.log('new Product: ', newProduct);
         Product.create(newProduct)
             .then(() => {
                 return res.json('Product created');
             }).catch((err) => {
+                console.log('error: ', err);
                 return res.status(400).json({ error: err })
             })
     } catch (error) {
