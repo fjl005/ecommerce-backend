@@ -2,6 +2,7 @@ const express = require('express');
 const productsRouter = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const authenticate = require('../authenticate');
 
 productsRouter.get('/', async (req, res) => {
     try {
@@ -26,7 +27,7 @@ productsRouter.get('/:productId', async (req, res) => {
 });
 
 
-productsRouter.post('/', async (req, res) => {
+productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
     console.log('?')
     const { name, price, description, productType } = req.body;
     try {
@@ -39,7 +40,7 @@ productsRouter.post('/', async (req, res) => {
         console.log('new Product: ', newProduct);
         Product.create(newProduct)
             .then(() => {
-                return res.json('Product created');
+                return res.json({ message: 'product created', product: newProduct });
             }).catch((err) => {
                 console.log('error: ', err);
                 return res.status(400).json({ error: err })
