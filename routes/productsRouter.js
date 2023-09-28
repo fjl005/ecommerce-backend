@@ -18,11 +18,36 @@ productsRouter.get('/:productId', async (req, res) => {
     try {
         const product = await Product.findById(productId);
         if (product.length === 0) {
-            return res.status(404).json({ message: 'No products found for the given username.' });
+            return res.status(404).json({ message: 'No products found for the given id.' });
         }
         res.json(product);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+productsRouter.put('/:productId', async (req, res) => {
+    const productId = req.params.productId;
+    const { name, price, description, productType } = req.body;
+
+    try {
+        const product = await Product.findByIdAndUpdate(
+            { _id: productId },
+            {
+                name,
+                price,
+                description,
+                productType
+            },
+            { new: true } // Return the updated document
+        );
+        if (product.length === 0) {
+            return res.status(404).json({ message: 'No products found for the given id.' });
+        }
+        console.log('product: ', product);
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
 
@@ -154,6 +179,43 @@ productsRouter.post('/verifyCard', async (req, res) => {
         }
     } catch (error) {
         res.status(500).send('Sorry there was an error with your card.');
+    }
+});
+
+productsRouter.delete('/:productId', async (req, res) => {
+    const productId = req.params.productId;
+    try {
+        const productToDelete = await Product.findById(productId);
+
+        if (!productToDelete) {
+            return res.status(404).json({ message: 'No products found for the given id.' });
+        }
+
+        await Product.findByIdAndDelete(productId);
+
+        res.json({ message: 'Product deleted successfully', deletedProduct: productToDelete });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+productsRouter.delete('/multiple/items', async (req, res) => {
+    const itemSelectedIdArr = req.body;
+    console.log('itemSelectedIdArr: ', itemSelectedIdArr);
+    try {
+
+        for (let productId of itemSelectedIdArr) {
+            const productToDelete = await Product.findById(productId);
+            if (!productToDelete) {
+                return res.status(404).json({ message: 'No products found for the given id.' });
+            }
+
+            await Product.findByIdAndDelete(productId);
+        }
+
+        res.json({ message: 'Multiple products deleted successfully', deletedProducts: itemSelectedIdArr });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
