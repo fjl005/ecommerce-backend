@@ -4,6 +4,8 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const authenticate = require('../authenticate');
 
+
+// GET OPERATIONS
 productsRouter.get('/', async (req, res) => {
     try {
         const products = await Product.find();
@@ -26,6 +28,28 @@ productsRouter.get('/:productId', async (req, res) => {
     }
 });
 
+productsRouter.get('/orders', async (req, res) => {
+
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(userId);
+
+        const orders = user.orders;
+
+        if (orders) {
+            return res.json(orders);
+        }
+
+        return res.send('No orders');
+    } catch (error) {
+        // res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'haha' });
+
+    }
+});
+
+
+// PUT OPERATIONS
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
     const { name, price, description, productType } = req.body;
@@ -52,8 +76,83 @@ productsRouter.put('/:productId', async (req, res) => {
 });
 
 
+productsRouter.put('/multiple/items', async (req, res) => {
+    const { productIds, updatedInfo } = req.body;
+    const { name, price, description, productType } = updatedInfo;
+
+    try {
+        const updatedProducts = [];
+
+        for (let productId of productIds) {
+            const product = await Product.findByIdAndUpdate(
+                { _id: productId },
+                {
+                    name,
+                    price,
+                    description,
+                    productType,
+                },
+                { new: true } // Return the updated document
+            );
+
+            if (!product) {
+                return res.status(404).json({ message: 'No product found for the given id.' });
+            }
+
+            updatedProducts.push(product);
+        }
+
+        console.log('updatedProducts: ', updatedProducts);
+        res.json(updatedProducts[0]);
+    } catch (error) {
+        res.status(500).json({ message: 'error in PUT for /product/:productId', error });
+    }
+});
+
+
+
+
+// DELETE OPERATIONS
+productsRouter.delete('/:productId', async (req, res) => {
+    const productId = req.params.productId;
+    try {
+        const productToDelete = await Product.findById(productId);
+
+        if (!productToDelete) {
+            return res.status(404).json({ message: 'No products found for the given id.' });
+        }
+
+        await Product.findByIdAndDelete(productId);
+
+        res.json({ message: 'Product deleted successfully', deletedProduct: productToDelete });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+productsRouter.delete('/multiple/items', async (req, res) => {
+    const itemSelectedIdArr = req.body;
+    console.log('itemSelectedIdArr: ', itemSelectedIdArr);
+    try {
+
+        for (let productId of itemSelectedIdArr) {
+            const productToDelete = await Product.findById(productId);
+            if (!productToDelete) {
+                return res.status(404).json({ message: 'No products found for the given id.' });
+            }
+
+            await Product.findByIdAndDelete(productId);
+        }
+
+        res.json({ message: 'Multiple products deleted successfully', deletedProducts: itemSelectedIdArr });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+// POST OPERATIONS
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
-    console.log('?')
     const { name, price, description, productType } = req.body;
     try {
         const newProduct = {
@@ -72,26 +171,6 @@ productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
             })
     } catch (error) {
         res.status(500).send('Sorry there was an error posting a product.');
-    }
-});
-
-productsRouter.get('/orders', async (req, res) => {
-
-    try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
-
-        const orders = user.orders;
-
-        if (orders) {
-            return res.json(orders);
-        }
-
-        return res.send('No orders');
-    } catch (error) {
-        // res.status(500).json({ message: 'Server error' });
-        res.status(500).json({ message: 'haha' });
-
     }
 });
 
@@ -179,43 +258,6 @@ productsRouter.post('/verifyCard', async (req, res) => {
         }
     } catch (error) {
         res.status(500).send('Sorry there was an error with your card.');
-    }
-});
-
-productsRouter.delete('/:productId', async (req, res) => {
-    const productId = req.params.productId;
-    try {
-        const productToDelete = await Product.findById(productId);
-
-        if (!productToDelete) {
-            return res.status(404).json({ message: 'No products found for the given id.' });
-        }
-
-        await Product.findByIdAndDelete(productId);
-
-        res.json({ message: 'Product deleted successfully', deletedProduct: productToDelete });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-productsRouter.delete('/multiple/items', async (req, res) => {
-    const itemSelectedIdArr = req.body;
-    console.log('itemSelectedIdArr: ', itemSelectedIdArr);
-    try {
-
-        for (let productId of itemSelectedIdArr) {
-            const productToDelete = await Product.findById(productId);
-            if (!productToDelete) {
-                return res.status(404).json({ message: 'No products found for the given id.' });
-            }
-
-            await Product.findByIdAndDelete(productId);
-        }
-
-        res.json({ message: 'Multiple products deleted successfully', deletedProducts: itemSelectedIdArr });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
     }
 });
 
