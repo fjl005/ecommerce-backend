@@ -2,6 +2,7 @@ const express = require('express');
 const productsRouter = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order');
 const authenticate = require('../authenticate');
 
 
@@ -193,16 +194,10 @@ productsRouter.post('/verifyCard', async (req, res) => {
         if (mismatchedFields.length === 0) {
             // All fields match
             console.log('All card information matched');
-            /*
 
-            COUPLE THINGS I NEED TO DO:
-            (1) REMOVE THE ITEMS FROM THE CART, THEN PLACE THEM IN AN 'ORDERS' PROPERTY IN MONGODB
-            (2) That might be it actually lmao.
-
-            */
+            // REMOVE THE ITEMS FROM THE CART, THEN PLACE THEM IN AN 'ORDERS' PROPERTY IN MONGODB
             const cart = user.cart;
             const cartInfoByProduct = [];
-
 
             // Create an array to store the promises
             const promises = [];
@@ -211,7 +206,6 @@ productsRouter.post('/verifyCard', async (req, res) => {
                 const productId = productIdObject.toString();
                 try {
                     const promise = await Product.findById(productId);
-                    console.log('promise: ', promise);
                     promises.push(promise);
 
                     cartInfoByProduct.push({
@@ -231,22 +225,32 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
             const currentDate = new Date();
 
-            console.log('cart info to add: ', cartInfoByProduct);
-
             const orderAdded = {
                 items: cartInfoByProduct,
                 orderDate: currentDate,
-                totalCost: req.body.totalCost
+                totalCost: req.body.totalCost,
+                username: user.username,
+                userId: userId,
             }
+
+            // const updatedUser = await User.findByIdAndUpdate(
+            //     { _id: userId },
+            //     {
+            //         $push: { orders: orderAdded },
+            //         $set: { "cart": [] },
+            //     },
+            //     { new: true },
+            // );
 
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: userId },
                 {
-                    $push: { orders: orderAdded },
                     $set: { "cart": [] },
                 },
                 { new: true },
             );
+
+            const postOrder = await Order.create(orderAdded);
 
             console.log('user: ', updatedUser);
 
