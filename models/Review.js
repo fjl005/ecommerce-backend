@@ -24,6 +24,10 @@ const reviewSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
+    orderIdString: {
+        type: String,
+        required: true
+    }
 });
 
 const Review = mongoose.model('Review', reviewSchema);

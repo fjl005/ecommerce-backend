@@ -6,6 +6,31 @@ const Review = require('../models/Review');
 const Order = require('../models/Order');
 const authenticate = require('../authenticate');
 
+// Not a route, just a function for DRY
+async function updateProductReviewStatus(username, orderId, purchasedItemId, hasReview) {
+    const orders = await Order.find({ username });
+
+    for (const order of orders) {
+        if (order._id.toString() === orderId) {
+            for (const product of order.items) {
+                if (product._id.toString() === purchasedItemId) {
+                    product.hasReview = hasReview;
+
+                    try {
+                        await order.save();
+                        console.log('Order object updated with product review status.');
+                    } catch (error) {
+                        console.log('Error updating user:', error);
+                    }
+
+                    break;
+                }
+            }
+            break;
+        }
+    }
+}
+
 
 reviewsRouter.get('/', async (req, res) => {
     try {
@@ -51,7 +76,8 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
                 purchasedItemId,
                 starRating,
                 ratingDescription,
-                currentDate
+                currentDate,
+                orderIdString: orderId.toString()
             });
         }
 
@@ -61,36 +87,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
 
         let foundProduct = null;
 
-        for (const order of orders) {
-            if (order._id.toString() === orderId) {
-                console.log('order found');
-                for (const product of order.items) {
-                    if (product._id.toString() === purchasedItemId) {
-                        console.log('product found');
-                        foundProduct = product;
-                        foundProduct.hasReview = true;
-
-                        try {
-                            await order.save();
-                            console.log('User object updated with product review status.');
-                        } catch (error) {
-                            console.log('Error updating user:', error);
-                        }
-
-                        break;
-                    }
-                }
-                if (foundProduct) {
-                    break;
-                }
-            }
-        }
-
-        if (foundProduct) {
-            console.log('Found product:', foundProduct);
-        } else {
-            console.log('Product not found.');
-        }
+        updateProductReviewStatus(username, orderId, purchasedItemId, true);
 
         res.status(201).json({ message: 'Review submitted successfully.' });
     } catch (error) {
@@ -119,7 +116,7 @@ reviewsRouter.get('/:purchasedItemId', async (req, res) => {
     }
 });
 
-reviewsRouter.delete(`/:purchasedItemId/:orderId`, async (req, res) => {
+reviewsRouter.delete(`/:purchasedItemId`, async (req, res) => {
     const { purchasedItemId, orderId } = req.params;
 
     let username;
@@ -129,45 +126,15 @@ reviewsRouter.delete(`/:purchasedItemId/:orderId`, async (req, res) => {
 
     try {
         const review = await Review.findOne({ purchasedItemId });
+        const orderId = review.orderIdString;
 
         if (review) {
             await Review.findByIdAndRemove(review._id);
-            // console.log('deleted');
 
             const orders = await Order.find({ username });
             let foundProduct = null;
 
-            for (const order of orders) {
-                console.log('order id: ', orderId);
-
-                // console.log('OUTER FOR LOOP. order: ', order);
-                if (order._id.toString() === orderId) {
-                    console.log('order found');
-                    for (const product of order.items) {
-                        // console.log("INNER FOR LOOP. product: ", product);
-                        // console.log('purchase item ID: ', purchasedItemId);
-                        if (product._id.toString() === purchasedItemId) {
-                            console.log('product found');
-                            foundProduct = product;
-                            foundProduct.hasReview = false;
-
-                            console.log('made it here');
-                            try {
-                                console.log('pre save');
-                                await order.save();
-                                console.log('Order object updated with product review status.');
-                            } catch (error) {
-                                console.log('Error updating user:', error);
-                            }
-
-                            break;
-                        }
-                    }
-                    if (foundProduct) {
-                        break;
-                    }
-                }
-            }
+            updateProductReviewStatus(username, orderId, purchasedItemId, false);
 
             res.status(200).json({ message: 'Review deleted successfully.' });
         } else {
