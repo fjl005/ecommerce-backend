@@ -13,7 +13,7 @@ const orderSchema = new mongoose.Schema({
         }
     }],
     orderDate: {
-        type: String,
+        type: Date,
         required: true,
     },
     totalCost: {

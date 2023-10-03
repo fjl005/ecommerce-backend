@@ -3,6 +3,7 @@ const reviewsRouter = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Review = require('../models/Review');
+const Order = require('../models/Order');
 const authenticate = require('../authenticate');
 
 
@@ -56,24 +57,26 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
 
         await review.save();
 
-        const user = await User.findOne({ username: username });
-        const orders = user.orders;
+        const orders = await Order.find({ username });
 
         let foundProduct = null;
 
         for (const order of orders) {
             if (order._id.toString() === orderId) {
+                console.log('order found');
                 for (const product of order.items) {
                     if (product._id.toString() === purchasedItemId) {
+                        console.log('product found');
                         foundProduct = product;
                         foundProduct.hasReview = true;
 
                         try {
-                            await user.save();
+                            await order.save();
                             console.log('User object updated with product review status.');
                         } catch (error) {
                             console.log('Error updating user:', error);
                         }
+
                         break;
                     }
                 }
@@ -116,9 +119,8 @@ reviewsRouter.get('/:purchasedItemId', async (req, res) => {
     }
 });
 
-reviewsRouter.delete('/:purchasedItemId', async (req, res) => {
-    const purchasedItemId = req.params.purchasedItemId;
-
+reviewsRouter.delete(`/:purchasedItemId/:orderId`, async (req, res) => {
+    const { purchasedItemId, orderId } = req.params;
 
     let username;
     if (req.session.user) {
@@ -126,11 +128,47 @@ reviewsRouter.delete('/:purchasedItemId', async (req, res) => {
     }
 
     try {
-        const review = await Review.findOne({ purchasedItemId: purchasedItemId });
+        const review = await Review.findOne({ purchasedItemId });
 
         if (review) {
             await Review.findByIdAndRemove(review._id);
-            console.log('deleted')
+            // console.log('deleted');
+
+            const orders = await Order.find({ username });
+            let foundProduct = null;
+
+            for (const order of orders) {
+                console.log('order id: ', orderId);
+
+                // console.log('OUTER FOR LOOP. order: ', order);
+                if (order._id.toString() === orderId) {
+                    console.log('order found');
+                    for (const product of order.items) {
+                        // console.log("INNER FOR LOOP. product: ", product);
+                        // console.log('purchase item ID: ', purchasedItemId);
+                        if (product._id.toString() === purchasedItemId) {
+                            console.log('product found');
+                            foundProduct = product;
+                            foundProduct.hasReview = false;
+
+                            console.log('made it here');
+                            try {
+                                console.log('pre save');
+                                await order.save();
+                                console.log('Order object updated with product review status.');
+                            } catch (error) {
+                                console.log('Error updating user:', error);
+                            }
+
+                            break;
+                        }
+                    }
+                    if (foundProduct) {
+                        break;
+                    }
+                }
+            }
+
             res.status(200).json({ message: 'Review deleted successfully.' });
         } else {
             console.log('not deleted')
@@ -140,33 +178,6 @@ reviewsRouter.delete('/:purchasedItemId', async (req, res) => {
     } catch (error) {
         console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
-    }
-
-    const user = await User.findOne({ username: username });
-    const orders = user.orders;
-
-    let foundProduct = null;
-
-    for (const order of orders) {
-        if (order._id.toString() === purchasedItemId) {
-            for (const product of order.items) {
-                if (product._id.toString() === purchasedItemId) {
-                    foundProduct = product;
-                    foundProduct.hasReview = false;
-
-                    try {
-                        await user.save();
-                        console.log('User object updated with product review status.');
-                    } catch (error) {
-                        console.log('Error updating user:', error);
-                    }
-                    break;
-                }
-            }
-            if (foundProduct) {
-                break;
-            }
-        }
     }
 });
 

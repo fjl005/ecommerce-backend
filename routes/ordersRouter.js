@@ -8,18 +8,21 @@ const Order = require('../models/Order');
 ordersRouter.get('/', authenticate.sessionValidation, async (req, res) => {
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
 
-        const orders = user.orders;
+        const userId = req.session.user._id.toString();
+        const orders = await Order.find({ userId });
 
         if (orders) {
             orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
+            console.log('orders: ', orders);
             return res.json(orders);
         }
 
+        console.log('orders: ', orders);
+
         return res.send('No orders');
     } catch (error) {
+        console.log('error: ', Error);
         res.status(500).json({ message: 'Server error' });
     }
 });
