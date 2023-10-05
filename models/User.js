@@ -36,21 +36,21 @@ const userSchema = new mongoose.Schema({
         state: String,
         zipCode: Number
     },
-    orders: [{
-        items: [{
-            productId: String,
-            name: String,
-            price: Number,
-            description: String,
-            productType: String,
-            hasReview: {
-                type: Boolean,
-                default: false
-            }
-        }],
-        orderDate: Date,
-        totalCost: Number
-    }]
+    // orders: [{
+    //     items: [{
+    //         productId: String,
+    //         name: String,
+    //         price: Number,
+    //         description: String,
+    //         productType: String,
+    //         hasReview: {
+    //             type: Boolean,
+    //             default: false
+    //         }
+    //     }],
+    //     orderDate: Date,
+    //     totalCost: Number
+    // }]
 });
 
 const User = mongoose.model('User', userSchema);
