@@ -10,11 +10,24 @@ ordersRouter.get('/', authenticate.checkAdmin, authenticate.sessionValidation, a
     try {
 
         const orders = await Order.find();
+        let totalBalance = 0;
 
         if (orders) {
             orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
-            console.log('orders: ', orders);
-            return res.json(orders);
+
+            for (let order of orders) {
+                for (let item of order.items) {
+                    totalBalance += item.price;
+                    console.log('item: ', item);
+                    console.log('item cost: ', item.price);
+                    console.log(typeof (item.price))
+                    console.log('total balance: ', totalBalance);
+                }
+            }
+
+
+
+            return res.json({ orders, totalBalance });
         }
 
         return res.send('No orders');

@@ -112,6 +112,16 @@ app.get('/', authenticate.sessionValidation, (req, res) => {
     res.send('Hello World');
 });
 
+app.post('/cloudinary', async (req, res) => {
+    try {
+        res.statusCode = 200;
+        res.send('successful');
+    } catch (error) {
+        console.log('Error: ', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 
 /* STEP SEVEN AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
