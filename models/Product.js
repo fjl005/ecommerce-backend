@@ -20,9 +20,9 @@ const productSchema = new mongoose.Schema({
     files: {
         type: String
     },
-    pictures: {
+    pictures: [{
         type: String
-    },
+    }],
     reviews: {
         type: String
     }

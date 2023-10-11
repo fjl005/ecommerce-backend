@@ -154,13 +154,14 @@ productsRouter.delete('/multiple/items', async (req, res) => {
 
 // POST OPERATIONS
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
-    const { name, price, description, productType } = req.body;
+    const { name, price, description, productType, pictures } = req.body;
     try {
         const newProduct = {
             name,
             price,
             description,
             productType,
+            pictures
         };
         console.log('new Product: ', newProduct);
         Product.create(newProduct)
