@@ -85,6 +85,7 @@ const cartRouter = require('./routes/cartRouter');
 const ordersRouter = require('./routes/ordersRouter');
 const favoritesRouter = require('./routes/favoritesRouter');
 const reviewsRouter = require('./routes/reviewsRouter');
+const cloudinaryRouter = require('./routes/cloudinaryRouter');
 
 
 // Mount the router onto the app so we can use the routes.
@@ -96,11 +97,11 @@ router.use('/cart', cartRouter);
 router.use('/orders', ordersRouter);
 router.use('/favorites', favoritesRouter);
 router.use('/reviews', reviewsRouter);
+router.use('/cloudinary', cloudinaryRouter);
 
 
 /* STEP FIVE: INCLUDE MISCELLANEOUS IMPORTS. */
 const authenticate = require('./authenticate');
-
 
 
 /* STEP SIX: ADD BASIC ROUTES FOR THE PAGES. */
@@ -112,17 +113,25 @@ app.get('/', authenticate.sessionValidation, (req, res) => {
     res.send('Hello World');
 });
 
-app.post('/cloudinary', async (req, res) => {
-    try {
-        res.statusCode = 200;
-        res.send('successful');
-    } catch (error) {
-        console.log('Error: ', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+// app.post('/cloudinary', async (req, res) => {
+//     try {
+//         res.statusCode = 200;
+//         res.send('successful');
+//     } catch (error) {
+//         console.log('Error: ', error);
+//         res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// });
 
-
+// app.delete(`/cloudinary/:publicId`, async (req, res) => {
+//     const publicId = req.params.publicId;
+//     try {
+//         await cloudinary.uploader.destroy(publicId);
+//     } catch (error) {
+//         console.log('Error: ', error);
+//         res.status(500).json({ error: 'Internal Server Error from .delete for /cloudinary/imgObjId endpoint' });
+//     }
+// });
 
 /* STEP SEVEN AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
 const connect = async () => {
@@ -142,3 +151,4 @@ const port = 5000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+

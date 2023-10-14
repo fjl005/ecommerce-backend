@@ -53,7 +53,8 @@ productsRouter.get('/orders', async (req, res) => {
 // PUT OPERATIONS
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
-    const { name, price, description, productType } = req.body;
+    console.log('req body: ', req.body);
+    const { name, price, description, productType } = req.body.updatedInfo;
 
     try {
         const product = await Product.findByIdAndUpdate(
