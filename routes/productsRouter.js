@@ -54,25 +54,41 @@ productsRouter.get('/orders', async (req, res) => {
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
     console.log('req body: ', req.body);
-    const { name, price, description, productType } = req.body.updatedInfo;
+    const { name, price, description, productType, deletePublicId, newImageData, } = req.body.updatedInfo;
 
     try {
-        const product = await Product.findByIdAndUpdate(
+        const productSearch = await Product.findById({ _id: productId });
+
+        const pictures = productSearch.pictures;
+        let updatedPictures = pictures;
+
+        if (deletePublicId && deletePublicId.length > 0) {
+            // Filter out images with publicIds in deletePublicId
+            updatedPictures = pictures.filter(({ publicId }) => !deletePublicId.includes(publicId));
+        }
+
+        // Concatenate updatedPictures with newImageData
+        const updatedImageData = Array.isArray(newImageData) ? [...updatedPictures, ...newImageData] : updatedPictures;
+        console.log('updated image data: ', updatedImageData);
+
+        const productUpdate = await Product.findByIdAndUpdate(
             { _id: productId },
             {
                 name,
                 price,
                 description,
-                productType
+                productType,
+                pictures: updatedImageData
             },
-            { new: true } // Return the updated document
+            { new: true }
         );
-        if (product.length === 0) {
+        if (!productUpdate) {
             return res.status(404).json({ message: 'No products found for the given id.' });
         }
-        console.log('product: ', product);
-        res.json(product);
+        console.log('product: ', productUpdate);
+        res.json(productUpdate);
     } catch (error) {
+        console.log('error: ', error);
         res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
@@ -110,8 +126,6 @@ productsRouter.put('/multiple/items', async (req, res) => {
         res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
-
-
 
 
 // DELETE OPERATIONS
@@ -155,7 +169,7 @@ productsRouter.delete('/multiple/items', async (req, res) => {
 
 // POST OPERATIONS
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
-    const { name, price, description, productType, pictures } = req.body;
+    const { name, price, description, productType, pictures } = req.body.updatedInfo;
     try {
         const newProduct = {
             name,
