@@ -54,7 +54,7 @@ productsRouter.get('/orders', async (req, res) => {
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
     console.log('req body: ', req.body);
-    const { name, price, description, productType, deletePublicId, newImageData, } = req.body.updatedInfo;
+    const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.updatedInfo;
 
     try {
         const productSearch = await Product.findById({ _id: productId });
@@ -62,14 +62,13 @@ productsRouter.put('/:productId', async (req, res) => {
         const pictures = productSearch.pictures;
         let updatedPictures = pictures;
 
-        if (deletePublicId && deletePublicId.length > 0) {
+        if (deletePublicIdArr && deletePublicIdArr.length > 0) {
             // Filter out images with publicIds in deletePublicId
-            updatedPictures = pictures.filter(({ publicId }) => !deletePublicId.includes(publicId));
+            updatedPictures = pictures.filter(({ publicId }) => !deletePublicIdArr.includes(publicId));
         }
 
         // Concatenate updatedPictures with newImageData
         const updatedImageData = Array.isArray(newImageData) ? [...updatedPictures, ...newImageData] : updatedPictures;
-        console.log('updated image data: ', updatedImageData);
 
         const productUpdate = await Product.findByIdAndUpdate(
             { _id: productId },
