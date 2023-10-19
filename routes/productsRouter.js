@@ -57,18 +57,7 @@ productsRouter.put('/:productId', async (req, res) => {
     const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.updatedInfo;
 
     try {
-        const productSearch = await Product.findById({ _id: productId });
-
-        const pictures = productSearch.pictures;
-        let updatedPictures = pictures;
-
-        if (deletePublicIdArr && deletePublicIdArr.length > 0) {
-            // Filter out images with publicIds in deletePublicId
-            updatedPictures = pictures.filter(({ publicId }) => !deletePublicIdArr.includes(publicId));
-        }
-
-        // Concatenate updatedPictures with newImageData
-        const updatedImageData = Array.isArray(newImageData) ? [...updatedPictures, ...newImageData] : updatedPictures;
+        const updatedImageData = await productSearchImageUpdate(productId, deletePublicIdArr, newImageData);
 
         const productUpdate = await Product.findByIdAndUpdate(
             { _id: productId },
@@ -94,37 +83,60 @@ productsRouter.put('/:productId', async (req, res) => {
 
 
 productsRouter.put('/multiple/items', async (req, res) => {
-    const { productIds, updatedInfo } = req.body;
-    const { name, price, description, productType } = updatedInfo;
+    const { itemSelectedIdArr, updatedInfo } = req.body;
+    console.log('updated info: ', updatedInfo);
+    const { name, price, description, productType, deletePublicIdArr, newImageData } = updatedInfo;
 
     try {
         const updatedProducts = [];
 
-        for (let productId of productIds) {
-            const product = await Product.findByIdAndUpdate(
+        for (let productId of itemSelectedIdArr) {
+
+            const updatedImageData = await productSearchImageUpdate(productId, deletePublicIdArr, newImageData);
+
+            const productUpdate = await Product.findByIdAndUpdate(
                 { _id: productId },
                 {
                     name,
                     price,
                     description,
                     productType,
+                    pictures: updatedImageData
                 },
                 { new: true } // Return the updated document
             );
 
-            if (!product) {
+            if (!productUpdate) {
                 return res.status(404).json({ message: 'No product found for the given id.' });
             }
 
-            updatedProducts.push(product);
+            updatedProducts.push(productUpdate);
         }
 
         console.log('updatedProducts: ', updatedProducts);
         res.json(updatedProducts[0]);
     } catch (error) {
+        console.log('error:', error);
         res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
+
+const productSearchImageUpdate = async (productId, deletePublicIdArr, newImageData) => {
+
+    const productSearch = await Product.findById({ _id: productId });
+
+    const pictures = productSearch.pictures;
+    let updatedPictures = pictures;
+
+    if (deletePublicIdArr && deletePublicIdArr.length > 0) {
+        // Filter out images with publicIds in deletePublicId
+        updatedPictures = pictures.filter(({ publicId }) => !deletePublicIdArr.includes(publicId));
+    }
+
+    // Concatenate updatedPictures with newImageData
+    return Array.isArray(newImageData) ? [...updatedPictures, ...newImageData] : updatedPictures;
+}
+
 
 
 // DELETE OPERATIONS
