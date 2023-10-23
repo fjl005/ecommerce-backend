@@ -25,8 +25,6 @@ ordersRouter.get('/', authenticate.checkAdmin, authenticate.sessionValidation, a
                 }
             }
 
-
-
             return res.json({ orders, totalBalance });
         }
 
@@ -57,9 +55,6 @@ ordersRouter.get('/user', authenticate.sessionValidation, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
-
-
-
 
 
 

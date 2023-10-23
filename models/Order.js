@@ -10,7 +10,10 @@ const orderSchema = new mongoose.Schema({
         hasReview: {
             type: Boolean,
             default: false
-        }
+        },
+        pictures: [{
+            url: String,
+        }],
     }],
     orderDate: {
         type: Date,
@@ -27,7 +30,7 @@ const orderSchema = new mongoose.Schema({
     userId: {
         type: String,
         required: true,
-    }
+    },
 });
 
 const Order = mongoose.model('Order', orderSchema);

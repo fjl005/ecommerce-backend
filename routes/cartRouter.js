@@ -3,6 +3,7 @@ const express = require('express');
 const cartRouter = express.Router();
 const User = require('../models/User');
 const authenticate = require('../authenticate');
+const Product = require('../models/Product');
 
 
 cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
@@ -11,6 +12,19 @@ cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
         const user = await User.findById(
             { _id: userId }
         );
+
+        const updatedCart = [];
+
+        for (let cartItemId of user.cart) {
+            const productExists = await Product.findById({ _id: cartItemId });
+            if (productExists) {
+                updatedCart.push(cartItemId);
+            }
+        }
+
+        // Update the user's cart with the filtered cart
+        user.cart = updatedCart;
+        await user.save();
 
         res.json({ cart: user.cart });
     } catch (error) {

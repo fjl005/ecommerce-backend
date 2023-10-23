@@ -235,12 +235,23 @@ productsRouter.post('/verifyCard', async (req, res) => {
                     const promise = await Product.findById(productId);
                     promises.push(promise);
 
+                    console.log('promise: ', promise);
+
+                    let pictureURLArr = [];
+                    if (promise.pictures && promise.pictures.length > 0) {
+                        let picObj = { url: promise.pictures[0].url };
+                        pictureURLArr.push(picObj);
+                    }
+
+                    console.log('SOOOOO the pic url is: ', pictureURLArr[0]);
+
                     cartInfoByProduct.push({
                         productId: promise._id.toString(),
                         name: promise.name,
                         price: promise.price,
                         description: promise.description,
-                        productType: promise.productType
+                        productType: promise.productType,
+                        pictures: pictureURLArr
                     });
 
                 } catch (error) {
@@ -259,15 +270,6 @@ productsRouter.post('/verifyCard', async (req, res) => {
                 username: user.username,
                 userId: userId,
             }
-
-            // const updatedUser = await User.findByIdAndUpdate(
-            //     { _id: userId },
-            //     {
-            //         $push: { orders: orderAdded },
-            //         $set: { "cart": [] },
-            //     },
-            //     { new: true },
-            // );
 
             const updatedUser = await User.findByIdAndUpdate(
                 { _id: userId },
@@ -288,6 +290,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
             return res.status(400).send('Some card information incorrect');
         }
     } catch (error) {
+        console.log('error: ', error)
         res.status(500).send('Sorry there was an error with your card.');
     }
 });

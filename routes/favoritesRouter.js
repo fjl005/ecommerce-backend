@@ -11,6 +11,20 @@ favoritesRouter.get('/', authenticate.sessionValidation, async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
+
+        const updatedFavorites = [];
+
+        for (let favoriteItemId of user.favorites) {
+            const favoriteExists = await Product.findById({ _id: favoriteItemId });
+            if (favoriteExists) {
+                updatedFavorites.push(favoriteItemId);
+            }
+        }
+
+        // Update the user's cart with the filtered cart
+        user.favorites = updatedFavorites;
+        await user.save();
+
         res.json({ favorites: user.favorites });
     } catch (error) {
         console.log('error: ', error);
