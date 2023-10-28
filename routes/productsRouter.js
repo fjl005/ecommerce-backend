@@ -29,6 +29,25 @@ productsRouter.get('/:productId', async (req, res) => {
     }
 });
 
+productsRouter.get('/search/:searchQuery', async (req, res) => {
+    console.log('here');
+    const searchQuery = req.params.searchQuery;
+    try {
+        const allproducts = await Product.find();
+        console.log('all products: ', allproducts);
+        if (allproducts.length === 0) {
+            return res.status(404).json({ message: 'No products found for the given id.' });
+        }
+
+        const productsWithName = allproducts.filter((product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        console.log('products with name: ', productsWithName);
+        res.json(productsWithName);
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 productsRouter.get('/orders', async (req, res) => {
 
     try {
