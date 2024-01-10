@@ -10,6 +10,7 @@ const authenticate = require('../authenticate');
 productsRouter.get('/', async (req, res) => {
     try {
         const products = await Product.find();
+        console.log(products);
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

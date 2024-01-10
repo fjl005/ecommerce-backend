@@ -53,7 +53,7 @@ reviewsRouter.get('/user/:username', async (req, res) => {
 });
 
 reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
-    const { productId, starRating, ratingDescription, currentDate, orderId, purchasedItemId } = req.body;
+    const { productId, starRating, ratingDescription, reviewDate, orderId, purchasedItemId } = req.body;
 
     let username;
     if (req.session.user) {
@@ -68,7 +68,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
             review.productId = productId;
             review.starRating = starRating;
             review.ratingDescription = ratingDescription;
-            review.currentDate = currentDate;
+            review.reviewDate = reviewDate;
         } else {
             review = new Review({
                 username,
@@ -76,7 +76,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
                 purchasedItemId,
                 starRating,
                 ratingDescription,
-                currentDate,
+                reviewDate,
                 orderIdString: orderId.toString()
             });
         }

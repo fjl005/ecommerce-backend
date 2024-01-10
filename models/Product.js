@@ -27,10 +27,10 @@ const productSchema = new mongoose.Schema({
     reviews: {
         type: String
     },
-    // datePosted: {
-    //     type: Date,
-    //     required: true,
-    // },
+    datePosted: {
+        type: Date,
+        required: true,
+    },
 });
 
 const Product = mongoose.model('Product', productSchema);
