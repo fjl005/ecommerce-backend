@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const ordersRouter = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
@@ -51,7 +52,29 @@ ordersRouter.get('/user', authenticate.sessionValidation, async (req, res) => {
 
         return res.send('No orders');
     } catch (error) {
-        console.log('error: ', Error);
+        console.log('error: ', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+ordersRouter.get('/user/:orderId', authenticate.sessionValidation, async (req, res) => {
+    const orderId = req.params.orderId;
+    const orderIdObj = new mongoose.Types.ObjectId(orderId);
+
+    try {
+
+        const userId = req.session.user._id.toString();
+        const order = await Order.findOne({ userId, _id: orderIdObj });
+
+        if (order) {
+            console.log('order: ', order);
+            return res.json(order);
+        }
+
+        return res.send('No orders');
+    } catch (error) {
+        console.log('here');
+        console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

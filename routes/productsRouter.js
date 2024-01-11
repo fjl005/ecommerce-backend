@@ -240,7 +240,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
         if (mismatchedFields.length === 0) {
             // All fields match
-            console.log('All card information matched');
+            // console.log('All card information matched');
 
             // REMOVE THE ITEMS FROM THE CART, THEN PLACE THEM IN AN 'ORDERS' PROPERTY IN MONGODB
             const cart = user.cart;
@@ -255,7 +255,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
                     const promise = await Product.findById(productId);
                     promises.push(promise);
 
-                    console.log('promise: ', promise);
+                    // console.log('promise: ', promise);
 
                     let pictureURLArr = [];
                     if (promise.pictures && promise.pictures.length > 0) {
@@ -263,7 +263,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
                         pictureURLArr.push(picObj);
                     }
 
-                    console.log('SOOOOO the pic url is: ', pictureURLArr[0]);
+                    // console.log('SOOOOO the pic url is: ', pictureURLArr[0]);
 
                     cartInfoByProduct.push({
                         productId: promise._id.toString(),
@@ -301,9 +301,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
             const postOrder = await Order.create(orderAdded);
 
-            console.log('user: ', updatedUser);
-
-            return res.status(200).send('All card information matched');
+            return res.status(200).json({ message: 'All card information matched', orderId: postOrder._id.toString() });
         } else {
             // Some fields do not match
             console.log('Card information does not match for:', mismatchedFields);
