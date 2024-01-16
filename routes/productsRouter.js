@@ -31,17 +31,15 @@ productsRouter.get('/:productId', async (req, res) => {
 });
 
 productsRouter.get('/search/:searchQuery', async (req, res) => {
-    console.log('here');
     const searchQuery = req.params.searchQuery;
+
     try {
         const allproducts = await Product.find();
-        console.log('all products: ', allproducts);
         if (allproducts.length === 0) {
             return res.status(404).json({ message: 'No products found for the given id.' });
         }
 
         const productsWithName = allproducts.filter((product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        console.log('products with name: ', productsWithName);
         res.json(productsWithName);
     } catch (error) {
         console.log('error: ', error);
@@ -160,7 +158,7 @@ const productSearchImageUpdate = async (productId, deletePublicIdArr, newImageDa
 
 
 // DELETE OPERATIONS
-productsRouter.delete('/:productId', async (req, res) => {
+productsRouter.delete('/:productId', authenticate.checkAdmin, async (req, res) => {
     const productId = req.params.productId;
     try {
         const productToDelete = await Product.findById(productId);
@@ -202,25 +200,28 @@ productsRouter.delete('/multiple/items', async (req, res) => {
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
     const { name, price, description, productType, pictures } = req.body.updatedInfo;
     try {
+        const today = new Date();
         const newProduct = {
             name,
             price,
             description,
             productType,
-            pictures
+            pictures,
+            datePosted: today
         };
         console.log('new Product: ', newProduct);
-        Product.create(newProduct)
-            .then(() => {
-                return res.json({ message: 'product created', product: newProduct });
-            }).catch((err) => {
-                console.log('error: ', err);
-                return res.status(400).json({ error: err })
-            })
+
+        // Using await with Product.create to handle the Promise
+        await Product.create(newProduct);
+
+        // If the Product.create is successful, the code below will be executed
+        res.json({ message: 'product created', product: newProduct });
     } catch (error) {
-        res.status(500).send('Sorry there was an error posting a product.');
+        console.log('error: ', error);
+        res.status(400).json({ error: error.message || 'Unknown error occurred' });
     }
 });
+
 
 productsRouter.post('/verifyCard', async (req, res) => {
     try {

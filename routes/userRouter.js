@@ -5,8 +5,6 @@ const userRouter = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const authenticate = require('../authenticate');
-const jwtFile = require('../JWT');
-const Product = require('../models/Product');
 
 
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
@@ -104,18 +102,6 @@ userRouter.post('/updatePassword', authenticate.sessionValidation, async (req, r
         }
     })(req, res);
 });
-
-
-// userRouter.post('/', authenticate.sessionValidation, (req, res) => {
-//     const sessionIdCookie = req.cookies['connect.sid'];
-
-//     res.status(200).json({
-//         message: 'User Info listed down below',
-//         username: req.session.user.username,
-//         userID: req.session.user._id,
-//         admin: req.session.user.admin
-//     })
-// });
 
 userRouter.post('/signup', async (req, res) => {
     const { username, password } = req.body;
