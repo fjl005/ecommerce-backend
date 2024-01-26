@@ -50,6 +50,77 @@ favoritesRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+favoritesRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.favorites = [];
+        await user.save();
+
+        res.json({ message: 'Favorites deleted successfully', favorites: user.favorites });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+favoritesRouter.put('/moveItemFromCart', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const { productId, origin } = req.body;
+
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.favorites.push(productId);
+
+        if (origin === 'cart') {
+            user.cart.splice(user.cart.indexOf(productId), 1);
+        } else if (origin === 'saved') {
+            user.saved.splice(user.saved.indexOf(productId), 1);
+        }
+
+        await user.save();
+
+        res.json({ message: 'Favorites moved to Cart.', cart: user.cart, favorites: user.favorites });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+favoritesRouter.put('/allToCart', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart.push(...user.favorites);
+        user.favorites = [];
+        await user.save();
+
+        res.json({ message: 'Favorites moved to Cart.', cart: user.cart, favorites: user.favorites });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.productId;
 

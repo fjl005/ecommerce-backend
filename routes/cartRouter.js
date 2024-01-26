@@ -52,6 +52,29 @@ cartRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+cartRouter.put('/allToFav', authenticate.sessionValidation, async (req, res) => {
+    try {
+        const userId = req.session.user._id.toString();
+        const user = await User.findById(
+            { _id: userId }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.favorites.push(...user.cart);
+        user.cart = [];
+        await user.save();
+
+        console.log('made it here')
+
+        res.json({ message: 'Moved all items from Cart to Favorites successfully', cart: user.cart, favorites: user.favorites });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 cartRouter.post('/:id', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.id;
 
