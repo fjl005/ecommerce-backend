@@ -45,7 +45,7 @@ reviewsRouter.get('/user/:username', async (req, res) => {
     const username = req.params.username;
 
     try {
-        const reviews = await Review.find({ username: username });
+        const reviews = await Review.find({ username: username }).sort({ reviewDate: -1 });
         res.json(reviews);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

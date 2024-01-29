@@ -72,7 +72,7 @@ productsRouter.get('/orders', async (req, res) => {
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
     console.log('req body: ', req.body);
-    const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.updatedInfo;
+    const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.uploadInfo;
 
     try {
         const updatedImageData = await productSearchImageUpdate(productId, deletePublicIdArr, newImageData);
@@ -101,14 +101,14 @@ productsRouter.put('/:productId', async (req, res) => {
 
 
 productsRouter.put('/multiple/items', async (req, res) => {
-    const { itemSelectedIdArr, updatedInfo } = req.body;
-    console.log('updated info: ', updatedInfo);
-    const { name, price, description, productType, deletePublicIdArr, newImageData } = updatedInfo;
+    const { itemsSelectedIdArr, uploadInfo } = req.body;
+    console.log('updated info: ', uploadInfo);
+    const { name, price, description, productType, deletePublicIdArr, newImageData } = uploadInfo;
 
     try {
         const updatedProducts = [];
 
-        for (let productId of itemSelectedIdArr) {
+        for (let productId of itemsSelectedIdArr) {
 
             const updatedImageData = await productSearchImageUpdate(productId, deletePublicIdArr, newImageData);
 
@@ -176,11 +176,10 @@ productsRouter.delete('/:productId', authenticate.checkAdmin, async (req, res) =
 });
 
 productsRouter.delete('/multiple/items', async (req, res) => {
-    const itemSelectedIdArr = req.body;
-    console.log('itemSelectedIdArr: ', itemSelectedIdArr);
+    const itemsSelectedIdArr = req.body;
     try {
 
-        for (let productId of itemSelectedIdArr) {
+        for (let productId of itemsSelectedIdArr) {
             const productToDelete = await Product.findById(productId);
             if (!productToDelete) {
                 return res.status(404).json({ message: 'No products found for the given id.' });
@@ -189,7 +188,7 @@ productsRouter.delete('/multiple/items', async (req, res) => {
             await Product.findByIdAndDelete(productId);
         }
 
-        res.json({ message: 'Multiple products deleted successfully', deletedProducts: itemSelectedIdArr });
+        res.json({ message: 'Multiple products deleted successfully', deletedProducts: itemsSelectedIdArr });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -198,7 +197,7 @@ productsRouter.delete('/multiple/items', async (req, res) => {
 
 // POST OPERATIONS
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
-    const { name, price, description, productType, pictures } = req.body.updatedInfo;
+    const { name, price, description, productType, pictures } = req.body.uploadInfo;
     try {
         const today = new Date();
         const newProduct = {
