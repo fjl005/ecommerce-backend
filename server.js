@@ -34,7 +34,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:3000',
+    origin: 'https://ambiguous-pest-production.up.railway.app/'
+    // origin: 'http://localhost:3000',
 }));
 
 
