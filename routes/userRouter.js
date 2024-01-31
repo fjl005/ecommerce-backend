@@ -7,7 +7,19 @@ const User = require('../models/User');
 const authenticate = require('../authenticate');
 
 
+// userRouter.post('/', authenticate.sessionValidation, (req, res) => {
+
+//     res.status(200).json({
+//         message: 'User Info listed down below',
+//         username: req.session.user.username,
+//         userID: req.session.user._id,
+//         admin: req.session.user.admin
+//     })
+// });
+
+
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
+
     res.status(200).json({
         message: 'User Info listed down below',
         username: req.session.user.username,
@@ -197,10 +209,12 @@ userRouter.post('/login', (req, res, next) => {
             // Set the cookie after successful authentication
             res.cookie('myCookie', req.session.user._id, {
                 maxAge: 1000 * 60 * 60,
-                httpOnly: true,
+                httpOnly: false,
                 // secure: true,
                 // sameSite: 'None',
             });
+
+            // res.setHeader('set-cookie', 'foo=bar');
 
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });

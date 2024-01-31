@@ -7,6 +7,7 @@ const { getUser } = require('../utils/userUtils');
 
 cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     try {
+        console.log('req cookies: ', req.cookies);
         const user = await getUser(req.session.user._id.toString());
         res.json({ cart: user.cart });
     } catch (error) {

@@ -59,9 +59,10 @@ app.use(session({
     store: store,
     cookie: {
         maxAge: 1000 * 60 * 60,
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        httpOnly: false,
+        // httpOnly: true,
+        // secure: true,
+        // sameSite: 'none',
     },
 }));
 
@@ -108,3 +109,6 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
+// app.listen(port, '127.0.0.1', () => {
+//     console.log(`Server is running at http://127.0.0.1:${port}`);
+// });

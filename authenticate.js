@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const User = require('./models/User');
 
 // Middleware to validate the session
 exports.sessionValidation = (req, res, next) => {
@@ -10,6 +9,8 @@ exports.sessionValidation = (req, res, next) => {
 
     // Retrieve the session data from mongo db store.
     const store = req.sessionStore; // Access the session store from the request
+
+    // Will use this once I can have cookies set up from the backend without needing to have them set up manually from the frontend.
     store.get(req.session.id, (error, session) => {
         if (error || !session) {
             // We probably won't make it here because of the first if condition for req.session.user.
