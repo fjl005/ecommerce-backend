@@ -34,8 +34,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(cors({
     credentials: true,
-    origin: 'https://verdant-trifle-3e5e76.netlify.app/'
-    // origin: 'http://localhost:3000',
+    origin: ['https://verdant-trifle-3e5e76.netlify.app/', 'http://localhost:3000']
 }));
 
 // app.set("trust proxy", 1);
