@@ -76,7 +76,7 @@ app.use(session({
         // httpOnly: true,
 
         // secure: true means it can only be sent over HTTPS connections.
-        // secure: true,
+        secure: true,
 
         // sameSite: controls whether cooie should be sent in cross-origin requests.
         // Strict: will only be sent if it's the same domain
