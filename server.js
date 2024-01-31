@@ -74,6 +74,9 @@ app.use(session({
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
         httpOnly: true,
+
+        // secure: app.get('env') === 'production' ? true : false,
+        // sameSite: 'none',
     },
 }));
 
