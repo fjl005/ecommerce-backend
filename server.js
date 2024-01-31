@@ -38,7 +38,7 @@ app.use(cors({
     origin: 'http://localhost:3000',
 }));
 
-
+app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
