@@ -34,8 +34,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(cors({
     credentials: true,
-    origin: 'https://65b9a43109a89f644ce57db8--verdant-trifle-3e5e76.netlify.app/'
-    // origin: 'http://localhost:3000',
+    // origin: 'https://65b9a43109a89f644ce57db8--verdant-trifle-3e5e76.netlify.app/'
+    origin: 'http://localhost:3000',
 }));
 
 // app.set("trust proxy", 1);
@@ -73,7 +73,7 @@ app.use(session({
         maxAge: 1000 * 60 * 60, // 1 hour
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
-        httpOnly: true,
+        // httpOnly: true,
 
         // secure: true means it can only be sent over HTTPS connections.
         // secure: true,
@@ -82,7 +82,7 @@ app.use(session({
         // Strict: will only be sent if it's the same domain
         // Lax: similar to strict, but cookies are allowed in top-level navigations initiated by the user.
         // None: the cookie will be sent in all contexts, including cross-origin requests.
-        sameSite: 'none',
+        // sameSite: 'none',
     },
 }));
 
