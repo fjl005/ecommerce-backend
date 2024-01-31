@@ -59,10 +59,10 @@ app.use(session({
     store: store,
     cookie: {
         maxAge: 1000 * 60 * 60,
-        httpOnly: false,
-        // httpOnly: true,
-        // secure: true,
-        // sameSite: 'none',
+        // httpOnly: false,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
     },
 }));
 
