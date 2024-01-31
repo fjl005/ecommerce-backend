@@ -73,7 +73,7 @@ app.use(session({
         maxAge: 1000 * 60 * 60, // 1 hour
 
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
-        // httpOnly: true,
+        httpOnly: true,
 
         // secure: true means it can only be sent over HTTPS connections.
         secure: true,
@@ -161,4 +161,9 @@ connect();
 // app.listen(port, () => {
 //     console.log(`Server is running on http://localhost:${port}`);
 // });
+
+const port = 10000;
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
 
