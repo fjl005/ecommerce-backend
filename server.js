@@ -82,7 +82,7 @@ app.use(session({
         // Strict: will only be sent if it's the same domain
         // Lax: similar to strict, but cookies are allowed in top-level navigations initiated by the user.
         // None: the cookie will be sent in all contexts, including cross-origin requests.
-        // sameSite: 'none',
+        sameSite: 'none',
     },
 }));
 
