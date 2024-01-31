@@ -13,7 +13,7 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const passport = require('./passport-config'); // passport was imported in passport-config and configured in that file.
+const passport = require('./passport-config');
 const session = require('express-session');
 const cors = require('cors');
 
@@ -37,19 +37,12 @@ app.use(cors({
     origin: ['https://verdant-trifle-3e5e76.netlify.app', 'http://localhost:3000']
 }));
 
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Add any additional headers your frontend uses
-    next();
-});
-
 // app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
 const store = new MongoDBStore({
     uri: process.env.MONGODB_URI,
-    // TTL: Time to Live Index, which will automatically delete the session from the Database after number of seconds had expired.
     ttl: 60 * 60 * 24,
     collection: 'sessions',
 });
@@ -60,33 +53,14 @@ store.on('error', (error) => {
 });
 
 app.use(session({
-    // The secret is used to sign the session ID cookie.
     secret: process.env.SESSION_SECRET,
-
-    // Resave will save the session data to the store on every request, even if the session didn't change. Setting it to false will reduce unnecessary writes to the session store. This is handy if you need to track every request, such as the time of the request sent (which may be used to track activity/inactivity).
     resave: false,
-
-    // Save Uninitialized determines whether to save sessions that did not modify the session data (ex: create sessions for all visitors). In my case, I want it to be false because I only want sessions when people are signed in (aka, updating the session data).
     saveUninitialized: false,
-
-    // Store is the session store used for storing the session data. This comes from MongoDBStore as defined above.
     store: store,
-
-    // Defines options for our cookie
     cookie: {
-        // maxAge: 1000 * 60 * 60 * 24, // 1 day (1 second * 60 seconds/min * 60 min/hr * 24 hrs/day)
-        maxAge: 1000 * 60 * 60, // 1 hour
-
-        // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
+        maxAge: 1000 * 60 * 60,
         httpOnly: true,
-
-        // secure: true means it can only be sent over HTTPS connections.
         secure: true,
-
-        // sameSite: controls whether cooie should be sent in cross-origin requests.
-        // Strict: will only be sent if it's the same domain
-        // Lax: similar to strict, but cookies are allowed in top-level navigations initiated by the user.
-        // None: the cookie will be sent in all contexts, including cross-origin requests.
         sameSite: 'none',
     },
 }));
@@ -105,7 +79,6 @@ const cloudinaryRouter = require('./routes/cloudinaryRouter');
 
 // Mount the router onto the app so we can use the routes.
 app.use('/', router);
-
 router.use('/products', productsRouter);
 router.use('/users', userRouter);
 router.use('/cart', cartRouter);
@@ -115,40 +88,8 @@ router.use('/reviews', reviewsRouter);
 router.use('/cloudinary', cloudinaryRouter);
 
 
-/* STEP FIVE: INCLUDE MISCELLANEOUS IMPORTS. */
-const authenticate = require('./authenticate');
 
-
-/* STEP SIX: ADD BASIC ROUTES FOR THE PAGES. */
-app.post('/', authenticate.sessionValidation, (req, res) => {
-    res.send('Hello World');
-});
-
-app.get('/', authenticate.sessionValidation, (req, res) => {
-    res.send('Hello World');
-});
-
-// app.post('/cloudinary', async (req, res) => {
-//     try {
-//         res.statusCode = 200;
-//         res.send('successful');
-//     } catch (error) {
-//         console.log('Error: ', error);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
-
-// app.delete(`/cloudinary/:publicId`, async (req, res) => {
-//     const publicId = req.params.publicId;
-//     try {
-//         await cloudinary.uploader.destroy(publicId);
-//     } catch (error) {
-//         console.log('Error: ', error);
-//         res.status(500).json({ error: 'Internal Server Error from .delete for /cloudinary/imgObjId endpoint' });
-//     }
-// });
-
-/* STEP SEVEN AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
+/* STEP FIVE AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
 const connect = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI, {
@@ -161,11 +102,6 @@ const connect = async () => {
     }
 }
 connect();
-
-// const port = 5000;
-// app.listen(port, () => {
-//     console.log(`Server is running on http://localhost:${port}`);
-// });
 
 const port = 10000;
 app.listen(port, () => {

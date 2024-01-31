@@ -4,27 +4,14 @@ const favoritesRouter = express.Router();
 const User = require('../models/User');
 const authenticate = require('../authenticate');
 const Product = require('../models/Product');
+const { getUser } = require('../utils/userUtils');
 
 
 favoritesRouter.get('/', authenticate.sessionValidation, async (req, res) => {
-    const username = req.session.user.username;
-
     try {
-        const user = await User.findOne({ username });
-
-        const updatedFavorites = [];
-
-        for (let favoriteItemId of user.favorites) {
-            const favoriteExists = await Product.findById({ _id: favoriteItemId });
-            if (favoriteExists) {
-                updatedFavorites.push(favoriteItemId);
-            }
-        }
-
-        // Update the user's cart with the filtered cart
-        user.favorites = updatedFavorites;
+        const user = await getUser(req.session.user._id.toString());
+        user.favorites;
         await user.save();
-
         res.json({ favorites: user.favorites });
     } catch (error) {
         console.log('error: ', error);
@@ -52,18 +39,9 @@ favoritesRouter.post('/', authenticate.sessionValidation, async (req, res) => {
 
 favoritesRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.favorites = [];
         await user.save();
-
         res.json({ message: 'Favorites deleted successfully', favorites: user.favorites });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -71,18 +49,10 @@ favoritesRouter.delete('/', authenticate.sessionValidation, async (req, res) => 
 });
 
 favoritesRouter.put('/moveItemFromCart', authenticate.sessionValidation, async (req, res) => {
+    const { productId, origin } = req.body;
+
     try {
-        const userId = req.session.user._id.toString();
-        const { productId, origin } = req.body;
-
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.favorites.push(productId);
 
         if (origin === 'cart') {
@@ -92,7 +62,6 @@ favoritesRouter.put('/moveItemFromCart', authenticate.sessionValidation, async (
         }
 
         await user.save();
-
         res.json({ message: 'Favorites moved to Cart.', cart: user.cart, favorites: user.favorites });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -102,19 +71,10 @@ favoritesRouter.put('/moveItemFromCart', authenticate.sessionValidation, async (
 
 favoritesRouter.put('/allToCart', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.cart.push(...user.favorites);
         user.favorites = [];
         await user.save();
-
         res.json({ message: 'Favorites moved to Cart.', cart: user.cart, favorites: user.favorites });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -125,9 +85,7 @@ favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req
     const productId = req.params.productId;
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
-
+        const user = await getUser(req.session.user._id.toString());
         const indexOfProduct = user.favorites.indexOf(productId);
 
         if (indexOfProduct !== -1) {
@@ -136,7 +94,6 @@ favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req
             return res.json(updatedUser);
         }
         return res.status(404).json({ message: 'Product not found in Favorites.' });
-
     } catch (error) {
         console.log('error: ', error);
         res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
@@ -162,11 +119,8 @@ favoritesRouter.post('/cart/:productId', authenticate.sessionValidation, async (
     const productId = req.params.productId;
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
-
+        const user = await getUser(req.session.user._id.toString());
         const indexOfProduct = user.favorites.indexOf(productId);
-
         if (indexOfProduct !== -1) {
             user.favorites.splice(indexOfProduct, 1);
             user.cart.push(productId);
@@ -174,14 +128,10 @@ favoritesRouter.post('/cart/:productId', authenticate.sessionValidation, async (
             return res.json(updatedUser);
         }
         return res.status(404).json({ message: 'Product cannot be added to Cart from Favorites.' });
-
     } catch (error) {
         console.log('error: ', error);
         res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
     }
 });
-
-
-
 
 module.exports = favoritesRouter;

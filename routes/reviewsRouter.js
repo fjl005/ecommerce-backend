@@ -1,12 +1,9 @@
 const express = require('express');
 const reviewsRouter = express.Router();
-const Product = require('../models/Product');
-const User = require('../models/User');
 const Review = require('../models/Review');
 const Order = require('../models/Order');
 const authenticate = require('../authenticate');
 
-// Not a route, just a function for DRY
 async function updateProductReviewStatus(username, orderId, purchasedItemId, hasReview) {
     const orders = await Order.find({ username });
 
@@ -15,14 +12,12 @@ async function updateProductReviewStatus(username, orderId, purchasedItemId, has
             for (const product of order.items) {
                 if (product._id.toString() === purchasedItemId) {
                     product.hasReview = hasReview;
-
                     try {
                         await order.save();
                         console.log('Order object updated with product review status.');
                     } catch (error) {
                         console.log('Error updating user:', error);
                     }
-
                     break;
                 }
             }
@@ -32,7 +27,7 @@ async function updateProductReviewStatus(username, orderId, purchasedItemId, has
 }
 
 
-reviewsRouter.get('/', async (req, res) => {
+reviewsRouter.get('/', authenticate.checkAdmin, authenticate.sessionValidation, async (req, res) => {
     try {
         const reviews = await Review.find();
         res.json(reviews);
@@ -41,7 +36,7 @@ reviewsRouter.get('/', async (req, res) => {
     }
 });
 
-reviewsRouter.get('/user/:username', async (req, res) => {
+reviewsRouter.get('/user/:username', authenticate.sessionValidation, async (req, res) => {
     const username = req.params.username;
 
     try {
@@ -62,7 +57,6 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
 
     try {
         let review = await Review.findOne({ purchasedItemId: purchasedItemId });
-        console.log('review: ', review);
 
         if (review) {
             review.productId = productId;
@@ -82,13 +76,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
         }
 
         await review.save();
-
-        const orders = await Order.find({ username });
-
-        let foundProduct = null;
-
         updateProductReviewStatus(username, orderId, purchasedItemId, true);
-
         res.status(201).json({ message: 'Review submitted successfully.' });
     } catch (error) {
         console.log('error: ', error);
@@ -105,11 +93,11 @@ reviewsRouter.get('/:purchasedItemId', async (req, res) => {
         });
 
         if (review) {
-            console.log('review: ', review);
             res.json(review);
         } else {
             res.status(404).json({ message: 'Review not found' });
         }
+
     } catch (error) {
         console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
@@ -117,7 +105,7 @@ reviewsRouter.get('/:purchasedItemId', async (req, res) => {
 });
 
 reviewsRouter.delete(`/:purchasedItemId`, async (req, res) => {
-    const { purchasedItemId, orderId } = req.params;
+    const { purchasedItemId } = req.params;
 
     let username;
     if (req.session.user) {
@@ -130,12 +118,8 @@ reviewsRouter.delete(`/:purchasedItemId`, async (req, res) => {
 
         if (review) {
             await Review.findByIdAndRemove(review._id);
-
-            const orders = await Order.find({ username });
-            let foundProduct = null;
-
-            updateProductReviewStatus(username, orderId, purchasedItemId, false);
-
+            // updateProductReviewStatus(username, orderId, purchasedItemId, false);
+            updateProductReviewStatus(username, orderId, purchasedItemId);
             res.status(200).json({ message: 'Review deleted successfully.' });
         } else {
             console.log('not deleted')

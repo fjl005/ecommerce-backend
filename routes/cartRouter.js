@@ -1,31 +1,13 @@
-require('dotenv').config();
+// require('dotenv').config();
 const express = require('express');
 const cartRouter = express.Router();
 const User = require('../models/User');
 const authenticate = require('../authenticate');
-const Product = require('../models/Product');
-
+const { getUser } = require('../utils/userUtils');
 
 cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        const updatedCart = [];
-
-        for (let cartItemId of user.cart) {
-            const productExists = await Product.findById({ _id: cartItemId });
-            if (productExists) {
-                updatedCart.push(cartItemId);
-            }
-        }
-
-        // Update the user's cart with the filtered cart
-        user.cart = updatedCart;
-        await user.save();
-
+        const user = await getUser(req.session.user._id.toString());
         res.json({ cart: user.cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -34,18 +16,9 @@ cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
 
 cartRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.cart = [];
         await user.save();
-
         res.json({ message: 'Cart deleted successfully', cart: user.cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -54,22 +27,16 @@ cartRouter.delete('/', authenticate.sessionValidation, async (req, res) => {
 
 cartRouter.put('/allToFav', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.favorites.push(...user.cart);
         user.cart = [];
         await user.save();
 
-        console.log('made it here')
-
-        res.json({ message: 'Moved all items from Cart to Favorites successfully', cart: user.cart, favorites: user.favorites });
+        res.json({
+            message: 'Moved all items from Cart to Favorites successfully',
+            cart: user.cart,
+            favorites: user.favorites
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -96,16 +63,11 @@ cartRouter.delete('/:id', authenticate.sessionValidation, async (req, res) => {
     const productId = req.params.id;
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
-
-        // Find the index of the first occurrence of the product, since the same item may be added in the cart multiple times.
+        const user = await getUser(req.session.user._id.toString());
         const indexOfProduct = user.cart.indexOf(productId);
 
         if (indexOfProduct !== -1) {
-            // If it exist, then remove just that one item from the cart. 
             user.cart.splice(indexOfProduct, 1);
-            // Save the updated user
             const updatedUser = await user.save();
             res.json(updatedUser);
         } else {
@@ -118,11 +80,7 @@ cartRouter.delete('/:id', authenticate.sessionValidation, async (req, res) => {
 
 cartRouter.get('/saved', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
+        const user = await getUser(req.session.user._id.toString());
         res.json({ saved: user.saved });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -132,15 +90,7 @@ cartRouter.get('/saved', authenticate.sessionValidation, async (req, res) => {
 
 cartRouter.delete('/all/saved', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.saved = [];
         await user.save();
 
@@ -152,19 +102,10 @@ cartRouter.delete('/all/saved', authenticate.sessionValidation, async (req, res)
 
 cartRouter.post('/all/tocart', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.cart.push(...user.saved);
         user.saved = [];
         await user.save();
-
         res.json({ message: 'Saved items moved to cart successfully', saved: user.saved, cart: user.cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -173,19 +114,10 @@ cartRouter.post('/all/tocart', authenticate.sessionValidation, async (req, res) 
 
 cartRouter.post('/all/tosaved', authenticate.sessionValidation, async (req, res) => {
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(
-            { _id: userId }
-        );
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
+        const user = await getUser(req.session.user._id.toString());
         user.saved.push(...user.cart);
         user.cart = [];
         await user.save();
-
         res.json({ message: 'Saved items moved to cart successfully', saved: user.saved, cart: user.cart });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -196,8 +128,7 @@ cartRouter.post('/saved/:id', authenticate.sessionValidation, async (req, res) =
     const productId = req.params.id;
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
+        const user = await getUser(req.session.user._id.toString());
         const indexOfProduct = user.cart.indexOf(productId);
 
         if (indexOfProduct !== -1) {
@@ -218,16 +149,11 @@ cartRouter.delete('/saved/:id', authenticate.sessionValidation, async (req, res)
     const productId = req.params.id;
 
     try {
-        const userId = req.session.user._id.toString();
-        const user = await User.findById(userId);
-
-        // Find the index of the first occurrence of the product, since the same item may be added in the cart multiple times.
+        const user = await getUser(req.session.user._id.toString());
         const indexOfProduct = user.saved.indexOf(productId);
 
         if (indexOfProduct !== -1) {
-            // If it exist, then remove just that one item from the cart. 
             user.saved.splice(indexOfProduct, 1);
-            // Save the updated user
             const updatedUser = await user.save();
             res.json(updatedUser);
         } else {

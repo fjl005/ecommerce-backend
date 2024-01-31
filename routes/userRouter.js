@@ -53,7 +53,6 @@ userRouter.post('/updateUsername', authenticate.sessionValidation, async (req, r
 userRouter.post('/updatePassword', authenticate.sessionValidation, async (req, res) => {
     const { username, password, newPW, reEnterPW } = req.body;
 
-    // First, check if the new passwords match
     if (newPW !== reEnterPW) {
         return res.status(401).send('New passwords do not match');
     }
@@ -75,7 +74,6 @@ userRouter.post('/updatePassword', authenticate.sessionValidation, async (req, r
 
             currentUser.password = hashedPassword;
             await currentUser.save();
-
             return currentUser;
         } catch (error) {
             console.log('error in updatePassword() in userRouter .post/updatePassword: ', error);
@@ -172,10 +170,6 @@ userRouter.post('/login', (req, res, next) => {
     }
 
     passport.authenticate('local', (err, user, info) => {
-        /* (err, user, info) => is the callback function that's run after the authentication process. 
-            (1) Err, for any error that occurred during authentication, 
-            (2) user, the authenticated user assuming success, and 
-            (3) info, providing additional info about the authentication process. */
         if (err) {
             return res.status(500).send('An error occurred during authentication');
         }
@@ -183,7 +177,7 @@ userRouter.post('/login', (req, res, next) => {
             return res.status(401).send('Invalid username or password');
         }
 
-        // If authentication is successful, regenerate the session ID (recommended for security). So if a user logs out and logs back in, the session ID will be different.
+        // If authentication is successful, regenerate the session ID
         req.session.regenerate((error) => {
             if (error) {
                 return res.status(500).send('An error occurred during session regeneration');
@@ -200,11 +194,17 @@ userRouter.post('/login', (req, res, next) => {
                 orders: user.orders
             };
 
-            // I don't think the res.cookie is working right now. Will need to figure this out eventually. For now, I am manually creating the cookie on the client side
+            // Set the cookie after successful authentication
+            res.cookie('myCookie', req.session.user._id, {
+                maxAge: 1000 * 60 * 60,
+                httpOnly: true,
+                // secure: true,
+                // sameSite: 'None',
+            });
+
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });
     })(req, res, next);
-    // I include (req, res, next) at the end to invoke the passport middleware. Without it, I am simply returning the middleware function without invoking it. 
 });
 
 userRouter.route('/logout').get(performLogout).post(performLogout).delete(performLogout);
