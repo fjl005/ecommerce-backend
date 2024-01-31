@@ -34,11 +34,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(cors({
     credentials: true,
-    // origin: 'https://65b97495458e034ceb8e3bae--cheery-brioche-0743e7.netlify.app/'
-    origin: 'http://localhost:3000',
+    origin: 'https://65b97495458e034ceb8e3bae--cheery-brioche-0743e7.netlify.app/'
+    // origin: 'http://localhost:3000',
 }));
 
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -75,7 +75,13 @@ app.use(session({
         // HttpOnly makes the cookie inaccessible to JavaScript on the client side, making it more secure and less prone to cross-site scripting attacks.
         httpOnly: true,
 
-        secure: app.get('env') === 'production' ? true : false,
+        // secure: true means it can only be sent over HTTPS connections.
+        // secure: true,
+
+        // sameSite: controls whether cooie should be sent in cross-origin requests.
+        // Strict: will only be sent if it's the same domain
+        // Lax: similar to strict, but cookies are allowed in top-level navigations initiated by the user.
+        // None: the cookie will be sent in all contexts, including cross-origin requests.
         sameSite: 'none',
     },
 }));
