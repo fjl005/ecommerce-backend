@@ -34,7 +34,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(cors({
     credentials: true,
-    origin: ['https://fetsy-ecommerce-frontend.onrender.com', 'https://www.fetsyshoponline.com', 'https://verdant-trifle-3e5e76.netlify.app', 'http://localhost:3000']
+    origin: ['https://fetsy-ecommerce-frontend.onrender.com',
+        'https://www.fetsyshoponline.com',
+        'https://fetsyshoponline.com',
+        'https://verdant-trifle-3e5e76.netlify.app',
+        'http://localhost:3000']
 }));
 
 app.set("trust proxy", 1);
@@ -103,10 +107,14 @@ const connect = async () => {
 }
 connect();
 
-const port = 10000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// const port = 10000;
+// app.listen(port, () => {
+//     console.log(`Server is running on port ${port}`);
+// });
+
+app.listen(() => {
+    console.log('Server is running on the default port');
+})
 
 // app.listen(port, '127.0.0.1', () => {
 //     console.log(`Server is running at http://127.0.0.1:${port}`);

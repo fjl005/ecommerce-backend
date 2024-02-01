@@ -5,6 +5,7 @@ const User = require('../models/User');
 const authenticate = require('../authenticate');
 const { getUser } = require('../utils/userUtils');
 
+
 cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     try {
         console.log('req cookies: ', req.cookies);
