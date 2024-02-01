@@ -206,16 +206,6 @@ userRouter.post('/login', (req, res, next) => {
                 orders: user.orders
             };
 
-            // Set the cookie after successful authentication
-            res.cookie('myCookie', req.session.user._id, {
-                maxAge: 1000 * 60 * 60,
-                httpOnly: false,
-                // secure: true,
-                // sameSite: 'None',
-            });
-
-            // res.setHeader('set-cookie', 'foo=bar');
-
             res.status(200).json({ message: 'user logged in!', user: req.session.user, sessionId: req.session.id });
         });
     })(req, res, next);

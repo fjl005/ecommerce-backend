@@ -41,7 +41,7 @@ app.use(cors({
         'http://localhost:3000']
 }));
 
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -107,15 +107,8 @@ const connect = async () => {
 }
 connect();
 
-const port = 443;
+const port = 10000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-// app.listen(() => {
-//     console.log('Server is running on the default port');
-// })
-
-// app.listen(port, '127.0.0.1', () => {
-//     console.log(`Server is running at http://127.0.0.1:${port}`);
-// });
