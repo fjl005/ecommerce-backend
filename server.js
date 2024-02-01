@@ -41,6 +41,7 @@ app.use(cors({
         'http://localhost:3000']
 }));
 
+// If cookies don't work, uncomment this.
 // app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
@@ -107,6 +108,7 @@ const connect = async () => {
 }
 connect();
 
+// If cookies don't work, change back to 443
 const port = 10000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

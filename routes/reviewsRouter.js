@@ -27,7 +27,7 @@ async function updateProductReviewStatus(username, orderId, purchasedItemId, has
 }
 
 
-reviewsRouter.get('/', authenticate.checkAdmin, authenticate.sessionValidation, async (req, res) => {
+reviewsRouter.get('/', async (req, res) => {
     try {
         const reviews = await Review.find();
         res.json(reviews);
