@@ -37,7 +37,7 @@ app.use(cors({
     origin: ['https://fetsy-ecommerce-frontend.onrender.com', 'https://www.fetsyshoponline.com', 'https://verdant-trifle-3e5e76.netlify.app', 'http://localhost:3000']
 }));
 
-// app.set("trust proxy", 1);
+app.set("trust proxy", 1);
 
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
@@ -59,7 +59,6 @@ app.use(session({
     store: store,
     cookie: {
         maxAge: 1000 * 60 * 60,
-        // httpOnly: false,
         httpOnly: true,
         secure: true,
         sameSite: 'none',
