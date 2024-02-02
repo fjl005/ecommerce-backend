@@ -26,6 +26,7 @@ productsRouter.get('/:productId', async (req, res) => {
         }
         res.json(product);
     } catch (error) {
+        console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -61,9 +62,7 @@ productsRouter.get('/orders', async (req, res) => {
 
         return res.send('No orders');
     } catch (error) {
-        // res.status(500).json({ message: 'Server error' });
-        res.status(500).json({ message: 'haha' });
-
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
@@ -71,7 +70,6 @@ productsRouter.get('/orders', async (req, res) => {
 // PUT OPERATIONS
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
-    console.log('req body: ', req.body);
     const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.uploadInfo;
 
     try {
@@ -91,7 +89,6 @@ productsRouter.put('/:productId', async (req, res) => {
         if (!productUpdate) {
             return res.status(404).json({ message: 'No products found for the given id.' });
         }
-        console.log('product: ', productUpdate);
         res.json(productUpdate);
     } catch (error) {
         console.log('error: ', error);
@@ -102,8 +99,14 @@ productsRouter.put('/:productId', async (req, res) => {
 
 productsRouter.put('/multiple/items', async (req, res) => {
     const { itemsSelectedIdArr, uploadInfo } = req.body;
-    console.log('updated info: ', uploadInfo);
-    const { name, price, description, productType, deletePublicIdArr, newImageData } = uploadInfo;
+    const {
+        name,
+        price,
+        description,
+        productType,
+        deletePublicIdArr,
+        newImageData
+    } = uploadInfo;
 
     try {
         const updatedProducts = [];
@@ -121,7 +124,7 @@ productsRouter.put('/multiple/items', async (req, res) => {
                     productType,
                     pictures: updatedImageData
                 },
-                { new: true } // Return the updated document
+                { new: true }
             );
 
             if (!productUpdate) {
@@ -131,7 +134,6 @@ productsRouter.put('/multiple/items', async (req, res) => {
             updatedProducts.push(productUpdate);
         }
 
-        console.log('updatedProducts: ', updatedProducts);
         res.json(updatedProducts[0]);
     } catch (error) {
         console.log('error:', error);
@@ -212,8 +214,6 @@ productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
 
         // Using await with Product.create to handle the Promise
         await Product.create(newProduct);
-
-        // If the Product.create is successful, the code below will be executed
         res.json({ message: 'product created', product: newProduct });
     } catch (error) {
         console.log('error: ', error);
@@ -239,9 +239,6 @@ productsRouter.post('/verifyCard', async (req, res) => {
         const mismatchedFields = fieldsToCompare.filter(field => req.body[field] !== mastercard[field]);
 
         if (mismatchedFields.length === 0) {
-            // All fields match
-            // console.log('All card information matched');
-
             // REMOVE THE ITEMS FROM THE CART, THEN PLACE THEM IN AN 'ORDERS' PROPERTY IN MONGODB
             const cart = user.cart;
             const cartInfoByProduct = [];
@@ -255,15 +252,11 @@ productsRouter.post('/verifyCard', async (req, res) => {
                     const promise = await Product.findById(productId);
                     promises.push(promise);
 
-                    // console.log('promise: ', promise);
-
                     let pictureURLArr = [];
                     if (promise.pictures && promise.pictures.length > 0) {
                         let picObj = { url: promise.pictures[0].url };
                         pictureURLArr.push(picObj);
                     }
-
-                    // console.log('SOOOOO the pic url is: ', pictureURLArr[0]);
 
                     cartInfoByProduct.push({
                         productId: promise._id.toString(),
@@ -291,11 +284,9 @@ productsRouter.post('/verifyCard', async (req, res) => {
                 userId: userId,
             }
 
-            const updatedUser = await User.findByIdAndUpdate(
+            await User.findByIdAndUpdate(
                 { _id: userId },
-                {
-                    $set: { "cart": [] },
-                },
+                { $set: { "cart": [] }, },
                 { new: true },
             );
 
