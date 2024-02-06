@@ -93,10 +93,10 @@ favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req
             const updatedUser = await user.save();
             return res.json(updatedUser);
         }
-        return res.status(404).json({ message: 'Product not found in Favorites.' });
+        return res.json({ message: 'Product not found in Favorites.' });
     } catch (error) {
         console.log('error: ', error);
-        res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
+        res.send(`Error with deleting item (product id ${productId})from Favorites.`);
     }
 });
 

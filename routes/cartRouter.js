@@ -1,4 +1,3 @@
-// require('dotenv').config();
 const express = require('express');
 const cartRouter = express.Router();
 const User = require('../models/User');
@@ -8,7 +7,6 @@ const { getUser } = require('../utils/userUtils');
 
 cartRouter.get('/', authenticate.sessionValidation, async (req, res) => {
     try {
-        console.log('req cookies: ', req.cookies);
         const user = await getUser(req.session.user._id.toString());
         res.json({ cart: user.cart });
     } catch (error) {
@@ -73,10 +71,10 @@ cartRouter.delete('/:id', authenticate.sessionValidation, async (req, res) => {
             const updatedUser = await user.save();
             res.json(updatedUser);
         } else {
-            res.status(404).json({ message: 'Product not found in cart.' });
+            res.json({ message: 'Product not found in cart.' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        res.json({ message: 'Server error' });
     }
 });
 

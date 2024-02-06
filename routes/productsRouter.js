@@ -6,11 +6,10 @@ const Order = require('../models/Order');
 const authenticate = require('../authenticate');
 
 
-// GET OPERATIONS
 productsRouter.get('/', async (req, res) => {
     try {
         const products = await Product.find();
-        console.log(products);
+        products.sort((a, b) => b.datePosted - a.datePosted);
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -21,12 +20,11 @@ productsRouter.get('/:productId', async (req, res) => {
     const productId = req.params.productId;
     try {
         const product = await Product.findById(productId);
-        if (product.length === 0) {
-            return res.status(404).json({ message: 'No products found for the given id.' });
+        if (!product) {
+            return res.status(404).json({ message: 'No Product' });
         }
         res.json(product);
     } catch (error) {
-        console.log('error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

@@ -47,6 +47,23 @@ reviewsRouter.get('/user/:username', authenticate.sessionValidation, async (req,
     }
 });
 
+reviewsRouter.put('/', authenticate.sessionValidation, async (req, res) => {
+    const { currUsername, newUsername } = req.body;
+
+    try {
+        const reviews = await Review.find({ username: currUsername });
+
+        for (let review of reviews) {
+            review.username = newUsername;
+            await review.save();
+        }
+
+        res.json(reviews);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
     const { productId, starRating, ratingDescription, reviewDate, orderId, purchasedItemId } = req.body;
 
@@ -118,7 +135,6 @@ reviewsRouter.delete(`/:purchasedItemId`, async (req, res) => {
 
         if (review) {
             await Review.findByIdAndRemove(review._id);
-            // updateProductReviewStatus(username, orderId, purchasedItemId, false);
             updateProductReviewStatus(username, orderId, purchasedItemId);
             res.status(200).json({ message: 'Review deleted successfully.' });
         } else {

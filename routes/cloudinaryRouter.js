@@ -22,10 +22,8 @@ cloudinaryRouter.delete(`/:publicId`, authenticate.checkAdmin, async (req, res) 
     try {
         const result = await cloudinary.uploader.destroy(publicId);
         if (result.result === 'ok') {
-            console.log('deleted');
             res.status(200).json({ message: 'Image deleted successfully' });
         } else {
-            console.log('no image');
             res.status(200).json({ message: 'Image not found' });
         }
     } catch (error) {

@@ -7,19 +7,7 @@ const User = require('../models/User');
 const authenticate = require('../authenticate');
 
 
-// userRouter.post('/', authenticate.sessionValidation, (req, res) => {
-
-//     res.status(200).json({
-//         message: 'User Info listed down below',
-//         username: req.session.user.username,
-//         userID: req.session.user._id,
-//         admin: req.session.user.admin
-//     })
-// });
-
-
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
-
     res.status(200).json({
         message: 'User Info listed down below',
         username: req.session.user.username,
@@ -73,7 +61,6 @@ userRouter.post('/updatePassword', authenticate.sessionValidation, async (req, r
         return res.status(401).send('Cannot use same password');
     }
 
-    // Function to update the password
     const updatePassword = async (username, newPassword) => {
         try {
             const salt = await bcrypt.genSalt();
@@ -123,13 +110,8 @@ userRouter.post('/signup', async (req, res) => {
         return res.status(400).send('Password needs to be more than 6 characters');
     }
     try {
-        // genSalt generates the salt. Default parameter is 10. The higher the number, the more secure it will be, but it will take longer. 10 takes a few seconds, but 20-30 can take a few days. Let's just go with the default. The salt will be automatically stored in the hashedPassword
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(password, salt);
-
-        // The line below combines the two lines above into one. The 10 specifies the number of rounds to create the salt. 
-        // const hashedPassword = await bcrypt.hash(password, 10);
-
         const newUser = { username: username, password: hashedPassword };
 
         await User.create(newUser);
@@ -189,13 +171,11 @@ userRouter.post('/login', (req, res, next) => {
             return res.status(401).send('Invalid username or password');
         }
 
-        // If authentication is successful, regenerate the session ID
         req.session.regenerate((error) => {
             if (error) {
                 return res.status(500).send('An error occurred during session regeneration');
             }
 
-            // Set user object in the session data
             req.session.user = {
                 username: user.username,
                 isLoggedIn: true,
@@ -219,10 +199,8 @@ function performLogout(req, res) {
         return res.status(200).send('User already logged out');
     }
 
-    // Clear the session cookie on the client-side
     res.clearCookie('connect.sid');
 
-    // Destroy the session data on the server-side
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
@@ -237,44 +215,35 @@ userRouter.post('/admin', authenticate.checkAdmin, (req, res) => {
     res.send('You are the admin!');
 });
 
-// THE BELOW WILL NEED TO BE USED FOR ADMIN, WILL NEED TO UPDATE USER AUTHORIZATION SOON!!!
-userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
-    try {
-        // Find all non-admin users
-        const nonAdminUsers = await User.find({ admin: false });
+// userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
+//     try {
+//         const nonAdminUsers = await User.find({ admin: false });
 
-        // Delete each non-admin user one by one
-        for (const user of nonAdminUsers) {
-            await user.deleteOne();
-        }
+//         for (const user of nonAdminUsers) {
+//             await user.deleteOne();
+//         }
 
-        res.json({ message: 'Non-admin users deleted successfully.' })
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'An error occurred while deleting non-admin users' });
-    }
-});
+//         res.json({ message: 'Non-admin users deleted successfully.' })
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).json({ error: 'An error occurred while deleting non-admin users' });
+//     }
+// });
 
 userRouter.delete('/:username', authenticate.sessionValidation, async (req, res) => {
     try {
-        // const userIdToDelete = req.params.id;
         const userIdToDelete = req.session.user._id.toString();
-
-        // Find the user by ID
         const userToDelete = await User.findById(userIdToDelete);
 
         if (!userToDelete) {
             return res.status(404).json({ error: 'User not found.' });
         }
 
-        // Check if the user to be deleted is an admin
         if (userToDelete.admin) {
             return res.status(403).json({ error: 'Admin users cannot be deleted.' });
         }
 
-        // If the user is not an admin, proceed with deletion
         await userToDelete.deleteOne();
-
         res.json({ message: 'User deleted successfully.' });
     } catch (error) {
         console.log(error);

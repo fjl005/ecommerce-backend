@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const ordersRouter = express.Router();
 const authenticate = require('../authenticate');
 const Order = require('../models/Order');
