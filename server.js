@@ -93,6 +93,16 @@ router.use('/reviews', reviewsRouter);
 router.use('/cloudinary', cloudinaryRouter);
 
 
+// Set up a "catch all" server route. 
+app.get("/*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build/index.html"), function (err) {
+        if (err) {
+            res.status(500).send(err);
+        }
+    });
+});
+
+
 
 /* STEP FIVE AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
 const connect = async () => {
