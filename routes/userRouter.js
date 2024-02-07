@@ -6,6 +6,14 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const authenticate = require('../authenticate');
 
+const convertUsernameToLowerCase = (req, res, next) => {
+    if (req.body.username) {
+        req.body.username = req.body.username.toLowerCase();
+    }
+    next();
+};
+
+userRouter.use(convertUsernameToLowerCase);
 
 userRouter.get('/', authenticate.sessionValidation, (req, res) => {
     res.status(200).json({
@@ -131,33 +139,6 @@ userRouter.get('/login', (req, res) => {
     res.send('Login page');
 });
 
-// FOR JWT
-// userRouter.post('/login', (req, res, next) => {
-//     // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
-//     passport.authenticate('local', (err, user, info) => {
-//         // (err, user, info) => is the callback function that's run after the authentication process. 
-//         // (1) Err, for any error that occurred during authentication, (2) user, the authenticated user assuming success, and (3) info, providing additional info about the authentication process. 
-//         if (err) {
-//             return res.status(500).send('An error occurred during authentication');
-//         }
-//         if (!user) {
-//             return res.status(401).send('Invalid username or password');
-//         }
-
-//         // If the authentication is successful, generate the JWT tokens
-//         const accessToken = jwtFile.createAccessToken(user);
-//         res.setHeader('Authorization', `Bearer ${accessToken}`);
-
-//         // Refresh token not used because I can't store in the browser's cookie. I can't store in the browser's cookie because I can't send the cookie data without https.
-//         // const refreshToken = jwtFile.createRefreshToken(user);
-//         // res.cookie('refresh-token', refreshToken, {
-//         //     httpOnly: true,
-//         // });
-//         res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
-//     })(req, res, next);
-// });
-
-// For SESSION
 userRouter.post('/login', (req, res, next) => {
     if (req.session.user) {
         return res.send(`You are already signed in as: ${req.session.user.username}`);
@@ -215,21 +196,6 @@ userRouter.post('/admin', authenticate.checkAdmin, (req, res) => {
     res.send('You are the admin!');
 });
 
-// userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
-//     try {
-//         const nonAdminUsers = await User.find({ admin: false });
-
-//         for (const user of nonAdminUsers) {
-//             await user.deleteOne();
-//         }
-
-//         res.json({ message: 'Non-admin users deleted successfully.' })
-//     } catch (error) {
-//         console.log(error);
-//         res.status(500).json({ error: 'An error occurred while deleting non-admin users' });
-//     }
-// });
-
 userRouter.delete('/:username', authenticate.sessionValidation, async (req, res) => {
     try {
         const userIdToDelete = req.session.user._id.toString();
@@ -250,6 +216,49 @@ userRouter.delete('/:username', authenticate.sessionValidation, async (req, res)
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+
+// FOR JWT
+// userRouter.post('/login', (req, res, next) => {
+//     // Passport.authenticate will trigger the authentication process that was configured in passport-config. This is because we imported passport, then configured the passport middleware to the passport-config file. 
+//     passport.authenticate('local', (err, user, info) => {
+//         // (err, user, info) => is the callback function that's run after the authentication process. 
+//         // (1) Err, for any error that occurred during authentication, (2) user, the authenticated user assuming success, and (3) info, providing additional info about the authentication process. 
+//         if (err) {
+//             return res.status(500).send('An error occurred during authentication');
+//         }
+//         if (!user) {
+//             return res.status(401).send('Invalid username or password');
+//         }
+
+//         // If the authentication is successful, generate the JWT tokens
+//         const accessToken = jwtFile.createAccessToken(user);
+//         res.setHeader('Authorization', `Bearer ${accessToken}`);
+
+//         // Refresh token not used because I can't store in the browser's cookie. I can't store in the browser's cookie because I can't send the cookie data without https.
+//         // const refreshToken = jwtFile.createRefreshToken(user);
+//         // res.cookie('refresh-token', refreshToken, {
+//         //     httpOnly: true,
+//         // });
+//         res.status(200).json({ message: 'user logged in!', accessToken: accessToken });
+//     })(req, res, next);
+// });
+// 
+// userRouter.delete('/', authenticate.checkAdmin, async (req, res) => {
+//     try {
+//         const nonAdminUsers = await User.find({ admin: false });
+
+//         for (const user of nonAdminUsers) {
+//             await user.deleteOne();
+//         }
+
+//         res.json({ message: 'Non-admin users deleted successfully.' })
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).json({ error: 'An error occurred while deleting non-admin users' });
+//     }
+// });
+
 
 
 module.exports = userRouter;
