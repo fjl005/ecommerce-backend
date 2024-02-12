@@ -40,6 +40,35 @@ ordersRouter.get('/user', authenticate.sessionValidation, async (req, res) => {
     }
 });
 
+ordersRouter.put('/user', authenticate.sessionValidation, async (req, res) => {
+    console.log('here')
+    const { currUsername, newUsername } = req.body;
+
+    console.log('curr name: ', currUsername);
+    console.log('new name: ', newUsername);
+
+
+    try {
+        const orders = await Order.find({ username: currUsername });
+
+        console.log('orders: ', orders);
+        if (orders) {
+            orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
+            for (let order of orders) {
+                order.username = newUsername
+                await order.save();
+            }
+
+            return res.json(orders);
+        }
+
+        return res.send('No orders');
+    } catch (error) {
+        console.log('error: ', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 ordersRouter.get('/user/:orderId', authenticate.sessionValidation, async (req, res) => {
     const orderId = req.params.orderId;
     const orderIdObj = new mongoose.Types.ObjectId(orderId);

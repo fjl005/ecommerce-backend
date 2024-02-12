@@ -84,6 +84,9 @@ const cloudinaryRouter = require('./routes/cloudinaryRouter');
 
 // Mount the router onto the app so we can use the routes.
 app.use('/', router);
+app.get('/', async (req, res) => {
+    res.status(200).send('Good');
+});
 router.use('/products', productsRouter);
 router.use('/users', userRouter);
 router.use('/cart', cartRouter);
@@ -93,14 +96,15 @@ router.use('/reviews', reviewsRouter);
 router.use('/cloudinary', cloudinaryRouter);
 
 
+
 // Set up a "catch all" server route. 
-app.get("/*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/build/index.html"), function (err) {
-        if (err) {
-            res.status(500).send(err);
-        }
-    });
-});
+// app.get("/*", (req, res) => {
+//     res.sendFile(path.join(__dirname, "../client/build/index.html"), function (err) {
+//         if (err) {
+//             res.status(500).send(err);
+//         }
+//     });
+// });
 
 
 

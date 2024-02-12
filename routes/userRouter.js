@@ -42,9 +42,10 @@ userRouter.post('/updateUsername', authenticate.sessionValidation, async (req, r
         }
 
         user.username = newUsername;
+        req.session.user.username = newUsername;
+
         await user.save();
 
-        req.session.user.username = newUsername;
 
         res.status(200).json({
             message: 'Username updated successfully',
