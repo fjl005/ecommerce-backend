@@ -41,17 +41,11 @@ ordersRouter.get('/user', authenticate.sessionValidation, async (req, res) => {
 });
 
 ordersRouter.put('/user', authenticate.sessionValidation, async (req, res) => {
-    console.log('here')
     const { currUsername, newUsername } = req.body;
-
-    console.log('curr name: ', currUsername);
-    console.log('new name: ', newUsername);
-
 
     try {
         const orders = await Order.find({ username: currUsername });
 
-        console.log('orders: ', orders);
         if (orders) {
             orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
             for (let order of orders) {
