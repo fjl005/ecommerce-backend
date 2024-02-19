@@ -41,14 +41,11 @@ app.use(cors({
         'http://localhost:3000']
 }));
 
-// If cookies don't work, uncomment this.
-// app.set("trust proxy", 1);
-
 /* STEP THREE: CREATE THE MONGODB STORE FOR THE SESSIONS */
 const MongoDBStore = require('connect-mongodb-session')(session);
 const store = new MongoDBStore({
     uri: process.env.MONGODB_URI,
-    ttl: 60 * 60 * 24,
+    ttl: 60 * 60,
     collection: 'sessions',
 });
 
@@ -63,7 +60,7 @@ app.use(session({
     saveUninitialized: false,
     store: store,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 1000 * 60 * 60,
         httpOnly: true,
         // secure: true,
         // sameSite: 'none',
@@ -97,17 +94,6 @@ router.use('/cloudinary', cloudinaryRouter);
 
 
 
-// Set up a "catch all" server route. 
-// app.get("/*", (req, res) => {
-//     res.sendFile(path.join(__dirname, "../client/build/index.html"), function (err) {
-//         if (err) {
-//             res.status(500).send(err);
-//         }
-//     });
-// });
-
-
-
 /* STEP FIVE AKA FINAL STEP: CONNECT MONGODB DATABASE AND SERVER. */
 const connect = async () => {
     try {
@@ -122,9 +108,7 @@ const connect = async () => {
 }
 connect();
 
-// If cookies don't work, change back to 443
 const port = 10000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-});
-
+}); ''

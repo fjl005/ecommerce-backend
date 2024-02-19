@@ -38,10 +38,10 @@ productsRouter.get('/search/:searchQuery', async (req, res) => {
             return res.status(404).json({ message: 'No products found for the given id.' });
         }
 
-        const productsWithName = allproducts.filter((product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        const productsWithName = allproducts.filter((product) => product.productName.toLowerCase().includes(searchQuery.toLowerCase()));
         res.json(productsWithName);
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -68,7 +68,7 @@ productsRouter.get('/orders', async (req, res) => {
 // PUT OPERATIONS
 productsRouter.put('/:productId', async (req, res) => {
     const productId = req.params.productId;
-    const { name, price, description, productType, deletePublicIdArr, newImageData, } = req.body.uploadInfo;
+    const { productName, price, description, productType, deletePublicIdArr, newImageData, } = req.body.uploadInfo;
 
     try {
         const updatedImageData = await productSearchImageUpdate(productId, deletePublicIdArr, newImageData);
@@ -76,7 +76,7 @@ productsRouter.put('/:productId', async (req, res) => {
         const productUpdate = await Product.findByIdAndUpdate(
             { _id: productId },
             {
-                name,
+                productName,
                 price,
                 description,
                 productType,
@@ -89,7 +89,7 @@ productsRouter.put('/:productId', async (req, res) => {
         }
         res.json(productUpdate);
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
@@ -98,7 +98,7 @@ productsRouter.put('/:productId', async (req, res) => {
 productsRouter.put('/multiple/items', async (req, res) => {
     const { itemsSelectedIdArr, uploadInfo } = req.body;
     const {
-        name,
+        productName,
         price,
         description,
         productType,
@@ -116,7 +116,7 @@ productsRouter.put('/multiple/items', async (req, res) => {
             const productUpdate = await Product.findByIdAndUpdate(
                 { _id: productId },
                 {
-                    name,
+                    productName,
                     price,
                     description,
                     productType,
@@ -134,7 +134,7 @@ productsRouter.put('/multiple/items', async (req, res) => {
 
         res.json(updatedProducts[0]);
     } catch (error) {
-        console.log('error:', error);
+        console.error('Error:', error);
         res.status(500).json({ message: 'error in PUT for /product/:productId', error });
     }
 });
@@ -197,24 +197,22 @@ productsRouter.delete('/multiple/items', async (req, res) => {
 
 // POST OPERATIONS
 productsRouter.post('/', authenticate.checkAdmin, async (req, res) => {
-    const { name, price, description, productType, pictures } = req.body.uploadInfo;
+    const { productName, price, description, productType, pictures } = req.body.uploadInfo;
     try {
         const today = new Date();
         const newProduct = {
-            name,
+            productName,
             price,
             description,
             productType,
             pictures,
             datePosted: today
         };
-        console.log('new Product: ', newProduct);
 
-        // Using await with Product.create to handle the Promise
         await Product.create(newProduct);
         res.json({ message: 'product created', product: newProduct });
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(400).json({ error: error.message || 'Unknown error occurred' });
     }
 });
@@ -258,7 +256,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
 
                     cartInfoByProduct.push({
                         productId: promise._id.toString(),
-                        name: promise.name,
+                        productName: promise.productName,
                         price: promise.price,
                         description: promise.description,
                         productType: promise.productType,
@@ -266,7 +264,7 @@ productsRouter.post('/verifyCard', async (req, res) => {
                     });
 
                 } catch (error) {
-                    console.log('error: ', error);
+                    console.error('Error: ', error);
                 }
             }
 
@@ -297,11 +295,9 @@ productsRouter.post('/verifyCard', async (req, res) => {
             return res.status(400).send('Some card information incorrect');
         }
     } catch (error) {
-        console.log('error: ', error)
+        console.error('Error: ', error)
         res.status(500).send('Sorry there was an error with your card.');
     }
 });
-
-
 
 module.exports = productsRouter;

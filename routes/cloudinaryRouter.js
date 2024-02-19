@@ -10,7 +10,7 @@ cloudinaryRouter.get('/', authenticate.checkAdmin, async (req, res) => {
         res.statusCode = 200;
         res.send('successful');
     } catch (error) {
-        console.log('Error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -18,7 +18,6 @@ cloudinaryRouter.get('/', authenticate.checkAdmin, async (req, res) => {
 cloudinaryRouter.delete(`/:publicId`, authenticate.checkAdmin, async (req, res) => {
     const publicId = req.params.publicId;
 
-    console.log(publicId);
     try {
         const result = await cloudinary.uploader.destroy(publicId);
         if (result.result === 'ok') {
@@ -27,7 +26,7 @@ cloudinaryRouter.delete(`/:publicId`, authenticate.checkAdmin, async (req, res) 
             res.status(200).json({ message: 'Image not found' });
         }
     } catch (error) {
-        console.log('Error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ error: 'Internal Server Error from .delete for /cloudinary/imgObjId endpoint' });
     }
 });

@@ -8,14 +8,11 @@ ordersRouter.get('/', authenticate.checkAdmin, authenticate.sessionValidation, a
 
     try {
         const orders = await Order.find();
-        let totalBalance = 0;
         if (orders) {
             orders.sort((a, b) => b.orderDate.getTime() - a.orderDate.getTime());
-            for (let order of orders) {
-                for (let item of order.items) {
-                    totalBalance += item.price;
-                }
-            }
+            const totalBalance = orders.reduce((acc, order) => {
+                return acc + order.items.reduce((subTotal, item) => subTotal + item.price, 0);
+            }, 0);
             return res.json({ orders, totalBalance });
         }
         return res.send('No orders');
@@ -36,7 +33,7 @@ ordersRouter.get('/user', authenticate.sessionValidation, async (req, res) => {
 
         return res.send('No orders');
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -59,7 +56,7 @@ ordersRouter.put('/user', authenticate.sessionValidation, async (req, res) => {
 
         return res.send('No orders');
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -78,7 +75,7 @@ ordersRouter.get('/user/:orderId', authenticate.sessionValidation, async (req, r
 
         return res.send('No orders');
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

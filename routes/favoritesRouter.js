@@ -14,7 +14,7 @@ favoritesRouter.get('/', authenticate.sessionValidation, async (req, res) => {
         await user.save();
         res.json({ favorites: user.favorites });
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).send('Error with Favorites Fetch Call.')
     }
 });
@@ -32,7 +32,7 @@ favoritesRouter.post('/', authenticate.sessionValidation, async (req, res) => {
 
         res.json(updatedUser);
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).send('Error with Favorites Fetch Call.')
     }
 });
@@ -95,7 +95,7 @@ favoritesRouter.delete('/:productId', authenticate.sessionValidation, async (req
         }
         return res.json({ message: 'Product not found in Favorites.' });
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.send(`Error with deleting item (product id ${productId})from Favorites.`);
     }
 });
@@ -129,7 +129,7 @@ favoritesRouter.post('/cart/:productId', authenticate.sessionValidation, async (
         }
         return res.status(404).json({ message: 'Product cannot be added to Cart from Favorites.' });
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).send(`Error with deleting item (product id ${productId})from Favorites.`);
     }
 });

@@ -26,10 +26,10 @@ async function updateProductReviewStatus(username, orderId, purchasedItemId, has
     }
 }
 
-
 reviewsRouter.get('/', async (req, res) => {
     try {
         const reviews = await Review.find();
+        reviews.sort((a, b) => b.reviewDate.getTime() - a.reviewDate.getTime());
         res.json(reviews);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -65,7 +65,18 @@ reviewsRouter.put('/', authenticate.sessionValidation, async (req, res) => {
 });
 
 reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
-    const { productId, starRating, ratingDescription, reviewDate, orderId, purchasedItemId } = req.body;
+    const {
+        starRating,
+        ratingDescription,
+        reviewDate,
+        orderId,
+        purchasedItemId,
+        productName,
+        productId,
+        imageURL,
+        productType,
+    } = req.body;
+
 
     let username;
     if (req.session.user) {
@@ -83,12 +94,15 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
         } else {
             review = new Review({
                 username,
-                productId,
+                imageURL,
                 purchasedItemId,
                 starRating,
                 ratingDescription,
                 reviewDate,
-                orderIdString: orderId.toString()
+                orderIdString: orderId.toString(),
+                productName,
+                productId,
+                productType,
             });
         }
 
@@ -96,7 +110,7 @@ reviewsRouter.post('/', authenticate.sessionValidation, async (req, res) => {
         updateProductReviewStatus(username, orderId, purchasedItemId, true);
         res.status(201).json({ message: 'Review submitted successfully.' });
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).send('There was a problem with the server.');
     }
 });
@@ -116,7 +130,7 @@ reviewsRouter.get('/:purchasedItemId', async (req, res) => {
         }
 
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -143,7 +157,7 @@ reviewsRouter.delete(`/:purchasedItemId`, async (req, res) => {
             res.status(404).json({ message: 'Review not found.' });
         }
     } catch (error) {
-        console.log('error: ', error);
+        console.error('Error: ', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
