@@ -85,7 +85,73 @@ The middlewares used in this server include:
   - The **origin** is specified to only allow requests from our frontend application’s URLs. These URLs may vary from development to deployment, but currently, we only need to allow requests from the second and third URLs.
 
 
+
 Since we’ve already mentioned configuring passport and incorporating it as a middleware into our Express application, I think it makes sense to take a little detour from our server.js to talk about Passport!
 
 
-### (2) Configure and Incorporate Passport
+### (2) Configure and Incorporate Passport in passport-config.js
+All right, passport has been mentioned a couple times already. What the heck is it, exactly? It’s a popular authentication middleware for Node.JS applications with various strategies, including username/password (local, which we’ll use), OAuth, etc. Passport will help ease the process of authenticating the user and generating sessions associated with the logged in user!
+
+#### A) Import Necessary Modules
+To use passport in our Express application, we need to first configure it given the various strategies available.
+
+We will need to import the following:
+- Passport: because, well, we need passport. This imports the Passport.js library into this file.
+- LocalStrategy: we are importing specifically the Strategy constructor from the passport-local module. We only need this constructor function to create instances of the local authentication strategy. 
+  - There are a wide variety of strategies available on Passport, but we’re sticking with local strategy since we’ll only do a username/password login method.
+- Bcrypt: a popular library used for securely salting and hashing passwords, and also comparing them. This is important because we don’t want to store passwords directly into our database for security reasons!
+- User: we’re importing the User model, which allows us to access user data from MongoDB.
+
+#### B) Define Local Strategy Authentication
+In this passport-config file, we are defining an authentication strategy using Passport's use method. This method takes an instance of the authentication strategy, which, in this case, is LocalStrategy. The LocalStrategy constructor takes two arguments:
+
+- (1) An optional options object, which specifies the configuration options for the strategy.
+  - This would be needed if, for example, the ‘username’ and ‘password’ didn’t have those names in the HTML input attributes.
+- (2) A ‘verify’ callback function that is invoked when a user attempts to authenticate. This callback function accepts three arguments:
+  - The username entered by the user,
+  - The password entered by the user
+  - A ‘done’ callback function, which indicates whether the authentication was successful or not. The 'done' callback function is a standard pattern used throughout the Passport authentication process. It takes three parameters:
+      - Error: If an error occurs during the authentication process, this parameter should be set to the error object. Otherwise, it should be set to null.
+      - User object: If authentication is successful, this parameter should contain the user object associated with the authenticated user. If authentication fails, it should be set to false or null.
+      - Info: This is an optional argument that provides additional information about the authentication attempt, typically as an error message or other details.
+
+#### C) LocalStrategy ‘Verify’ Callback Function
+So, further elaborating on the verify callback function, let’s see what’s going on in the asynchronous function: 
+
+1. First, it finds if the username exists from the MongoDB database. If one doesn’t exist, then that means this username is fake! Or at least it’s not registered yet. Whatever the case, the done callback function is returned, with no error, a null user object, and an error message saying no user was found.
+2. Instead, if the username does exist in our database, then we will use bcrypt to compare the entered password with the username’s hashed password from the database. Bcrypt will hash the recently entered password to compare the two. The bcrypt compare method takes three arguments
+  - (1) the entered password,
+  - (2) the database hashed password,
+  - (3) A callback function that takes two parameters: error and isMatch.
+      - If there is an error during this process, it will throw an error into the catch block.
+      - If it is a match, return the done function with the user object indicating a success. This will trigger the serialization process, which will have access to the user info retrieved from the database (notably, its ID).
+      - If the passwords don’t match, we run the ‘done’ function with ‘false’ as the user parameter.
+
+To actually invoke this local strategy, we need to use passport.authenticate associated with the /login endpoint.
+
+Assuming success, a session is generated! But how is the session created? We’ll need to use a method called serializeUser.
+
+#### D) SerializeUser
+If authentication is complete and successful, the method serializeUser will be run. This takes a callback function, which has two arguments: 
+- (1) the user object
+    - During the ‘verify’ callback function, if the hashed password comparison was successful, then the user object retrieved from MongoDB was passed into the ‘done.’ Because it was passed through ‘done’, it’s now available here, and we can serialize the user ID into this session for future HTTP requests.
+- (2) A ‘done’ callback function
+
+The serializeUser function will then use this unique identifier (user.id) from the user object and store it in the session data. The session ID should be stored in the browser’s cookie such that in future HTTP requests, we pass along the session that can be deserialized to determine whether the user ID matches that from the MongoDB Database. 
+
+The deserializeUser follows the same format as serializeUser. There are a couple differences:
+- The function is asynchronous since we need to interact with the MongoDB database. 
+- Its first argument is the ID that was passed from the browser’s session, which we hope will match the ID from MongoDB assuming you’re you! 
+
+After serialization, the user authentication process is complete!
+
+#### To Summarize:
+- When we use Local Strategy (authenticating with just username and password), we need to check if both match what’s in our database.
+- Ideally, the password would be salted and hashed (which we did via bcrypt) for security purposes.
+- Assuming a match, we take the user ID from the database (a unique identifier) and use it to serialize the given session.
+- When serialized, the session cookie will store this information and will be held in the browser.
+- In subsequent requests, the session cookie will be parsed by our backend server, and will deserialize the user ID in the cookie to verify it matches that from the database.
+- Assuming a match, your HTTP requests are golden!
+
+
+Since we’ve been talking about storing the serialized ID in sessions and using sessions in subsequent requests, it now makes sense to talk about sessions in more detail!
